@@ -32,6 +32,7 @@ SELECT_REPORT_FILE_PATH = text(
 SELECT_PLANS = text(
     """
     SELECT * FROM plans
+    WHERE status = 'active'
     ORDER BY created_at DESC
     """
 )
