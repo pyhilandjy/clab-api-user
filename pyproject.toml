@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "clab-api-user"
+name = "poetry_test"
 version = "0.1.0"
 description = ""
 authors = ["pyhilandjy <hilandjy@gmail.com>"]
@@ -18,7 +18,12 @@ supabase = "^2.6.0"
 loguru = "^0.7.2"
 uvicorn = "^0.30.5"
 python-multipart = "^0.0.9"
+pytz = "^2024.1"
 
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+black = "^24.8.0"
 
 [build-system]
 requires = ["poetry-core"]
