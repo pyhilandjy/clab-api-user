@@ -1,12 +1,10 @@
 from typing import Dict
-
+from fastapi import Header
 import jwt
-from fastapi import APIRouter
 from supabase import Client, create_client
 
 from app.config import settings
 
-router = APIRouter()
 
 supabase: Client = create_client(settings.supabase_url, settings.supabase_service_key)
 
@@ -22,3 +20,12 @@ def get_user_info_from_token(token: str) -> str:
         audience=JWT_AUDIENCE,
     )
     return payload
+
+
+async def get_current_user(authorization: str = Header(...)):
+    try:
+        token = authorization.split(" ")[1]
+        payload = get_user_info_from_token(token)
+        return payload
+    except Exception as e:
+        raise e
