@@ -50,13 +50,9 @@ SELECT_PLANS_USER = text(
     """
 )
 
-UPDATE_USER_PLAN = text(
+INSERT_USER_PLAN = text(
     """
-    UPDATE user_plan
-    SET
-        plan_id = :plan_id,
-        user_id = :user_id,
-        start_at = :start_at,
-        end_at = :end_at,
+    INSERT INTO user_plan (plan_id, user_id, start_at, end_at)
+    VALUES (:plan_id, :user_id, :start_at, :end_at)
     """
 )

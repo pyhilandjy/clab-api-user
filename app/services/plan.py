@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 
-from app.db.query import SELECT_PLANS, SELECT_PLANS_USER, UPDATE_USER_PLAN, SELECT_PLAN
+from app.db.query import SELECT_PLANS, SELECT_PLANS_USER, INSERT_USER_PLAN, SELECT_PLAN
 from app.db.worker import execute_insert_update_query, execute_select_query
 
 
@@ -48,10 +48,10 @@ def update_user_plan(user_id, plan_id):
             "plan_id": plan_id,
         },
     )
-    day = plan[day]
+    day = plan[0].day
     start_at, end_at = plan_date(day)
     execute_insert_update_query(
-        query=UPDATE_USER_PLAN,
+        query=INSERT_USER_PLAN,
         params={
             "plan_id": plan_id,
             "user_id": user_id,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Header, HTTPException
-from app.services.plan import select_plans, update_user_plan
+from app.services.plan import select_plans, update_user_plan, select_plans_user
 from app.services.users import get_current_user
 
 router = APIRouter()
@@ -16,7 +16,8 @@ async def get_plans():
     return file_ids
 
 
-@router.post("/plans/user/{plan_id}", tags=["Audio"])
+@router.post("/user/plans/{plan_id}", tags=["Plan"])
+# async def post_user_plan(plan_id: str, user_id: str):
 async def post_user_plan(plan_id: str, current_user=Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
@@ -24,5 +25,18 @@ async def post_user_plan(plan_id: str, current_user=Depends(get_current_user)):
             raise HTTPException(status_code=400, detail="Invalid user ID")
         update_user_plan(user_id, plan_id)
         return {"message": "User plan updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/user/plan/", tags=["Plan"])
+async def post_user_plan(current_user=Depends(get_current_user)):
+    # async def get_user_plan(user_id):
+    try:
+        user_id = current_user.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+        user_plan = select_plans_user(user_id)
+        return user_plan
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
