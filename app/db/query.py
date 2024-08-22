@@ -75,7 +75,54 @@ INSERT_USER_MISSION_START_DATE = text(
 
 SELECT_USER_MISSION = text(
     """
-    SELECT * FROM missions
-    WHERE plans_id = :plans_id
+    select
+    um.id,
+    um.start_at,
+    um.created_at,
+    m.day,
+    m.title,
+    coalesce(sum(af.record_time), 0) as play_seconds,
+    count(af.record_time) as counts
+    from
+    user_missions um
+    join missions m on um.missions_id = m.id
+    left join audio_files af on um.id = af.user_missions_id
+    where
+    um.user_id = :user_id
+    and um.status = 'active'
+    group by
+    um.id,
+    m.day,
+    m.title
+    order by
+    day asc;
+    """
+)
+
+SELECT_USER_MISSION_DETAIL = text(
+    """
+    select
+    um.id,
+    um.start_at,
+    um.created_at,
+    m.day,
+    m.title,
+    m.message,
+    m.summation
+    from
+    user_missions um
+    join missions m on um.missions_id = m.id
+    where
+    um.user_id = :user_id
+    and um.status = 'active'
+    and um.id = :user_missions_id
+    group by
+    um.id,
+    m.day,
+    m.title,
+    m.message,
+    m.summation
+    order by
+    day asc;
     """
 )

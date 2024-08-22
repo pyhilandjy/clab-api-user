@@ -12,7 +12,7 @@ from app.services.users import get_current_user
 router = APIRouter()
 
 
-@router.post("/", tags=["Audio"])
+@router.post("", tags=["Audio"])
 async def create_upload_file(
     current_user: dict = Depends(get_current_user),
     audio: UploadFile = File(...),

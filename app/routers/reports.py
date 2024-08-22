@@ -19,7 +19,7 @@ class ReportModel(BaseModel):
     end_date: date
 
 
-@router.get("/reports/", tags=["Report"])
+@router.get("/reports", tags=["Report"])
 async def select_report_metadata(current_user=Depends(get_current_user)):
     user_id = current_user.get("sub")
     report_metadata = get_report_metadata(user_id)

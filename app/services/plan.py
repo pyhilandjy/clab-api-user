@@ -8,6 +8,8 @@ from app.db.query import (
     SELECT_PLAN,
     SELECT_MISSION,
     INSERT_USER_MISSION_START_DATE,
+    SELECT_USER_MISSION,
+    SELECT_USER_MISSION_DETAIL,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -28,6 +30,22 @@ def select_plans_user(user_id):
         params={
             "plans_id": plans_id[0].plans_id,
         },
+    )
+
+
+def select_user_missions(user_id):
+    return execute_select_query(
+        query=SELECT_USER_MISSION,
+        params={
+            "user_id": user_id,
+        },
+    )
+
+
+def select_user_missions_detail(user_id, user_missions_id):
+    return execute_select_query(
+        query=SELECT_USER_MISSION_DETAIL,
+        params={"user_id": user_id, "user_missions_id": user_missions_id},
     )
 
 
@@ -104,7 +122,7 @@ def update_user_plan_mission(user_id, plans_id):
         mission_start_at = mission_start_date(plan_start_at, mission_day)
 
         execute_insert_update_query(
-            query=INSERT_USER_MISSION_START_DATE,
+            query=SELECT_USER_MISSION,
             params={
                 "mission_id": i.id,
                 "user_id": user_id,
@@ -113,4 +131,4 @@ def update_user_plan_mission(user_id, plans_id):
             },
         )
 
-    report = "1"
+    # report = "1"
