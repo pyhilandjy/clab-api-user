@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Header, HTTPException
-from app.services.plan import select_plans, update_user_plan, select_plans_user
+from app.services.plan import select_plans, update_user_plan_mission, select_plans_user
 from app.services.users import get_current_user
 
 router = APIRouter()
@@ -10,28 +10,27 @@ async def get_plans():
     """
     plan 데이터를 가져오는 엔드포인트
     """
-    file_ids = select_plans()
-    if not file_ids:
+    plan = select_plans()
+    if not plan:
         raise HTTPException(status_code=404, detail="Files not found")
-    return file_ids
+    return plan
 
 
 @router.post("/user/plans/{plan_id}", tags=["Plan"])
-# async def post_user_plan(plan_id: str, user_id: str):
 async def post_user_plan(plan_id: str, current_user=Depends(get_current_user)):
+    """user_plans, user_missions insert"""
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(status_code=400, detail="Invalid user ID")
-        update_user_plan(user_id, plan_id)
+        update_user_plan_mission(user_id, plan_id)
         return {"message": "User plan updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/user/plan/", tags=["Plan"])
+@router.get("/user/plans/", tags=["Plan"])
 async def post_user_plan(current_user=Depends(get_current_user)):
-    # async def get_user_plan(user_id):
     try:
         user_id = current_user.get("sub")
         if not user_id:

@@ -1,7 +1,14 @@
 from datetime import datetime, timedelta
 import pytz
 
-from app.db.query import SELECT_PLANS, SELECT_PLANS_USER, INSERT_USER_PLAN, SELECT_PLAN
+from app.db.query import (
+    SELECT_PLANS,
+    SELECT_USER_PLANS_ID,
+    INSERT_USER_PLANS,
+    SELECT_PLAN,
+    SELECT_MISSION,
+    INSERT_USER_MISSION_START_DATE,
+)
 from app.db.worker import execute_insert_update_query, execute_select_query
 
 
@@ -10,10 +17,16 @@ def select_plans():
 
 
 def select_plans_user(user_id):
-    return execute_select_query(
-        query=SELECT_PLANS_USER,
+    plans_id = execute_select_query(
+        query=SELECT_USER_PLANS_ID,
         params={
             "user_id": user_id,
+        },
+    )
+    return execute_select_query(
+        query=SELECT_PLAN,
+        params={
+            "plans_id": plans_id[0].plans_id,
         },
     )
 
@@ -41,21 +54,63 @@ def plan_date(day: int):
     return start_at, end_at
 
 
-def update_user_plan(user_id, plan_id):
+def mission_start_date(start_at, day):
+    # 주말을 제외하고 day만큼 더하기
+    mission_start_at = start_at
+    days_added = 0
+
+    while days_added < day:
+        mission_start_at += timedelta(days=1)
+        if mission_start_at.weekday() < 5:
+            days_added += 1
+
+    # 시간을 9:00으로 설정
+    mission_start_at_with_time = datetime.combine(
+        mission_start_at, datetime.min.time()
+    ).replace(hour=9, minute=0)
+
+    return mission_start_at_with_time
+
+
+def update_user_plan_mission(user_id, plans_id):
     plan = execute_select_query(
         query=SELECT_PLAN,
         params={
-            "plan_id": plan_id,
+            "plans_id": plans_id,
         },
     )
     day = plan[0].day
-    start_at, end_at = plan_date(day)
+    plan_start_at, plan_end_at = plan_date(day)
+
     execute_insert_update_query(
-        query=INSERT_USER_PLAN,
+        query=INSERT_USER_PLANS,
         params={
-            "plan_id": plan_id,
+            "plans_id": plans_id,
             "user_id": user_id,
-            "start_at": start_at,
-            "end_at": end_at,
+            "start_at": plan_start_at,
+            "end_at": plan_end_at,
         },
     )
+
+    mission = execute_select_query(
+        query=SELECT_MISSION,
+        params={
+            "plans_id": plans_id,
+        },
+    )
+
+    for i in mission:
+        mission_day = i.day - 1
+        mission_start_at = mission_start_date(plan_start_at, mission_day)
+
+        execute_insert_update_query(
+            query=INSERT_USER_MISSION_START_DATE,
+            params={
+                "mission_id": i.id,
+                "user_id": user_id,
+                "mission_start_at": mission_start_at,
+                "start_at": mission_start_at,
+            },
+        )
+
+    report = "1"

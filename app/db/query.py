@@ -40,20 +40,42 @@ SELECT_PLANS = text(
 SELECT_PLAN = text(
     """
     SELECT * FROM plans
-    WHERE id = :plan_id
+    WHERE id = :plans_id
     """
 )
 
-SELECT_PLANS_USER = text(
+SELECT_USER_PLANS_ID = text(
     """
-    SELECT * FROM user_plan
+    SELECT plans_id FROM user_plans
     WHERE user_id = :user_id
     """
 )
 
-INSERT_USER_PLAN = text(
+
+INSERT_USER_PLANS = text(
     """
-    INSERT INTO user_plan (plan_id, user_id, start_at, end_at)
-    VALUES (:plan_id, :user_id, :start_at, :end_at)
+    INSERT INTO user_plans (plans_id, user_id, start_at, end_at)
+    VALUES (:plans_id, :user_id, :start_at, :end_at)
+    """
+)
+
+SELECT_MISSION = text(
+    """
+    SELECT * FROM missions
+    WHERE plans_id = :plans_id
+    """
+)
+
+INSERT_USER_MISSION_START_DATE = text(
+    """
+    INSERT INTO user_missions (missions_id, user_id, start_at)
+    VALUES (:missions_id, :user_id, :start_at)
+    """
+)
+
+SELECT_USER_MISSION = text(
+    """
+    SELECT * FROM missions
+    WHERE plans_id = :plans_id
     """
 )
