@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Depends
 from pydantic import BaseModel
 
 from app.services.report import (
@@ -8,7 +8,7 @@ from app.services.report import (
     get_report_file_path,
     get_report_metadata,
 )
-from app.services.users import get_user_info_from_token
+from app.services.users import get_current_user
 
 router = APIRouter()
 
@@ -20,10 +20,8 @@ class ReportModel(BaseModel):
 
 
 @router.get("/reports/", tags=["Report"])
-async def select_report_metadata(authorization: str = Header(...)):
-    token = authorization.split(" ")[1]
-    payload = get_user_info_from_token(token)
-    user_id = payload.get("sub")
+async def select_report_metadata(current_user=Depends(get_current_user)):
+    user_id = current_user.get("sub")
     report_metadata = get_report_metadata(user_id)
     return report_metadata
 

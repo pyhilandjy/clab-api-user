@@ -1,10 +1,12 @@
 from typing import Dict
-from fastapi import Header
+from fastapi import Header, Security
+from fastapi.security.api_key import APIKeyHeader
 import jwt
 from supabase import Client, create_client
 
 from app.config import settings
 
+api_key_header = APIKeyHeader(name="authorization", auto_error=False)
 
 supabase: Client = create_client(settings.supabase_url, settings.supabase_service_key)
 
@@ -22,7 +24,7 @@ def get_user_info_from_token(token: str) -> str:
     return payload
 
 
-async def get_current_user(authorization: str = Header(...)):
+async def get_current_user(authorization: str = Security(api_key_header)):
     try:
         token = authorization.split(" ")[1]
         payload = get_user_info_from_token(token)
