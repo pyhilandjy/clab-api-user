@@ -130,5 +130,3 @@ def update_user_plan_mission(user_id, plans_id):
                 "start_at": mission_start_at,
             },
         )
-
-    # report = "1"

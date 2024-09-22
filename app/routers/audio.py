@@ -29,3 +29,9 @@ async def create_upload_file(
         return {"message": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# 상황 태그 database 추가, api 추가
+@router.post("/situation/", tags=["Audio"])
+async def create_audio_situation(situation: str):
+    pass
