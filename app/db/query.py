@@ -70,30 +70,31 @@ INSERT_USER_MISSION_START_DATE = text(
     """
     INSERT INTO user_missions (missions_id, user_id, start_at)
     VALUES (:missions_id, :user_id, :start_at)
+    RETURNING id;
     """
 )
 
 SELECT_USER_MISSION = text(
     """
     select
-    um.id,
-    um.start_at,
-    um.created_at,
-    m.day,
-    m.title,
+    user_missions.id,
+    user_missions.start_at,
+    user_missions.created_at,
+    missions.day,
+    missions.title,
     coalesce(sum(af.record_time), 0) as play_seconds,
     count(af.record_time) as counts
     from
-    user_missions um
-    join missions m on um.missions_id = m.id
-    left join audio_files af on um.id = af.user_missions_id
+    user_missions
+    join missions on user_missions.missions_id = missions.id
+    left join audio_files af on user_missions.id = af.user_missions_id
     where
-    um.user_id = :user_id
-    and um.status = 'active'
+    user_missions.user_id = :user_id
+    and user_missions.status = 'active'
     group by
-    um.id,
-    m.day,
-    m.title
+    user_missions.id,
+    missions.day,
+    missions.title
     order by
     day asc;
     """
@@ -124,5 +125,19 @@ SELECT_USER_MISSION_DETAIL = text(
     m.summation
     order by
     day asc;
+    """
+)
+
+SELECT_REPORTS = text(
+    """
+    SELECT * FROM reports
+    WHERE plans_id = :plans_id
+    """
+)
+
+INSERT_REPORTS = text(
+    """
+    INSERT INTO user_reports (reports_id, user_id, user_missions_id, send_at)
+    VALUES (:reports_id, :user_id, :user_missions_id, :send_at)
     """
 )

@@ -10,6 +10,8 @@ from app.db.query import (
     INSERT_USER_MISSION_START_DATE,
     SELECT_USER_MISSION,
     SELECT_USER_MISSION_DETAIL,
+    SELECT_REPORTS,
+    INSERT_REPORTS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -90,16 +92,16 @@ def mission_start_date(start_at, day):
     return mission_start_at_with_time
 
 
-def update_user_plan_mission(user_id, plans_id):
-    plan = execute_select_query(
-        query=SELECT_PLAN,
-        params={
-            "plans_id": plans_id,
-        },
-    )
-    day = plan[0].day
-    plan_start_at, plan_end_at = plan_date(day)
+def calculate_plan_dates(plan):
+    """플랜의 시작일과 종료일을 계산"""
+    if plan[0].type == "기간형":
+        day = plan[0].day
+        return plan_date(day)
+    return None, None
 
+
+def insert_user_plan(user_id, plans_id, plan_start_at, plan_end_at):
+    """user_plans 테이블에 플랜 정보를 삽입"""
     execute_insert_update_query(
         query=INSERT_USER_PLANS,
         params={
@@ -110,23 +112,92 @@ def update_user_plan_mission(user_id, plans_id):
         },
     )
 
-    mission = execute_select_query(
-        query=SELECT_MISSION,
-        params={
-            "plans_id": plans_id,
-        },
-    )
 
-    for i in mission:
-        mission_day = i.day - 1
-        mission_start_at = mission_start_date(plan_start_at, mission_day)
-
-        execute_insert_update_query(
-            query=SELECT_USER_MISSION,
+def insert_user_missions(user_id, plan_start_at, plan, missions):
+    """미션 데이터를 user_missions 테이블에 삽입하고 mission_id와 user_mission_id를 매핑"""
+    mission_to_user_mission = {}
+    for mission in missions:
+        mission_start_at = (
+            mission_start_date(plan_start_at, mission.day - 1)
+            if plan[0].type == "기간형"
+            else None
+        )
+        user_mission_id = execute_insert_update_query(
+            query=INSERT_USER_MISSION_START_DATE,
             params={
-                "mission_id": i.id,
+                "missions_id": mission.id,
                 "user_id": user_id,
-                "mission_start_at": mission_start_at,
                 "start_at": mission_start_at,
             },
+            return_id=True,
         )
+        mission_to_user_mission[str(mission.id)] = str(user_mission_id)
+    return mission_to_user_mission
+
+
+def insert_user_reports(user_id, plan_start_at, plan, reports, mission_to_user_mission):
+    """리포트 데이터를 user_reports 테이블에 삽입"""
+    date = 0
+    for report in reports:
+        matched_user_missions = [
+            mission_to_user_mission[str(mission_id)]
+            for mission_id in report.missions_id
+            if str(mission_id) in mission_to_user_mission
+        ]
+
+        matched_user_missions_str = "{" + ",".join(matched_user_missions) + "}"
+        date += len(report.missions_id)
+        # TODO: send_at 발행일자의 명확한 정의가 필요 주말은 제외하는지, 휴일은 제외하는지
+
+        send_at = (
+            datetime.combine(
+                plan_start_at + timedelta(days=len(report.missions_id) + date),
+                datetime.min.time(),
+            ).replace(hour=9, minute=0, second=0)
+            if plan[0].type == "기간형"
+            else None
+        )
+
+        execute_insert_update_query(
+            query=INSERT_REPORTS,
+            params={
+                "reports_id": report.id,
+                "user_id": user_id,
+                "user_missions_id": matched_user_missions_str,
+                "send_at": send_at,
+            },
+        )
+
+
+def update_user_plan_mission(user_id, plans_id):
+    # 플랜 데이터
+    plan = execute_select_query(
+        query=SELECT_PLAN,
+        params={"plans_id": plans_id},
+    )
+
+    # 플랜 시작 및 종료일 계산
+    plan_start_at, plan_end_at = calculate_plan_dates(plan)
+
+    # user_plans 적재
+    insert_user_plan(user_id, plans_id, plan_start_at, plan_end_at)
+
+    # 미션 데이터
+    missions = execute_select_query(
+        query=SELECT_MISSION,
+        params={"plans_id": plans_id},
+    )
+
+    # user_missions 적재
+    mission_to_user_mission = insert_user_missions(
+        user_id, plan_start_at, plan, missions
+    )
+
+    # 리포트 데이터
+    reports = execute_select_query(
+        query=SELECT_REPORTS,
+        params={"plans_id": plans_id},
+    )
+
+    # user_reports 적재
+    insert_user_reports(user_id, plan_start_at, plan, reports, mission_to_user_mission)

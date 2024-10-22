@@ -24,7 +24,7 @@ async def get_plans():
 
 @router.post("/user/plans/{plan_id}", tags=["Plan"])
 async def post_user_plan(plan_id: str, current_user=Depends(get_current_user)):
-    """user_plans, user_missions insert"""
+    """user_plans, user_missions, user_reports insert"""
     try:
         user_id = current_user.get("sub")
         if not user_id:
