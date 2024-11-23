@@ -26,7 +26,7 @@ async def select_report_metadata(current_user=Depends(get_current_user)):
     return report_metadata
 
 
-@router.get("/reports/{report}", tags=["Report"])
+@router.get("/reports/{report}/", tags=["Report"])
 async def select_report_pdf(report: str):
     file_path = get_report_file_path(report)
     return get_report(file_path)
