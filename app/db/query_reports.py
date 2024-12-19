@@ -106,3 +106,114 @@ SELECT_INSIGHT_DATA = text(
     ORDER BY reports_order ASC
     """
 )
+
+# Reports data
+SELECT_WORDCLOUD_IS_USE = text(
+    """
+    WITH report_ids AS (
+        SELECT reports_id
+        FROM user_reports
+        WHERE id = :user_reports_id AND status = 'DONE'
+    )
+    SELECT 
+        r.wordcloud AS wordcloud_data
+    FROM report_ids ri
+    JOIN reports r ON r.id = ri.reports_id
+    """
+)
+
+SELECT_SPEECH_ACT_IS_USE = text(
+    """
+    WITH report_ids AS (
+        SELECT reports_id
+        FROM user_reports
+        WHERE id = :user_reports_id AND status = 'DONE'
+    )
+    SELECT 
+        r.speech_act AS speech_act_data
+    FROM report_ids ri
+    JOIN reports r ON r.id = ri.reports_id
+    """
+)
+
+SELECT_POS_RATIO_IS_USE = text(
+    """
+    WITH report_ids AS (
+        SELECT reports_id
+        FROM user_reports
+        WHERE id = :user_reports_id AND status = 'DONE'
+    )
+    SELECT 
+        r.pos_ratio AS pos_ratio_data
+    FROM report_ids ri
+    JOIN reports r ON r.id = ri.reports_id
+    """
+)
+
+SELECT_SENTENCE_LENGTH_IS_USE = text(
+    """
+    WITH report_ids AS (
+        SELECT reports_id
+        FROM user_reports
+        WHERE id = :user_reports_id AND status = 'DONE'
+    )
+    SELECT 
+        r.sentence_length AS sentence_length_data
+    FROM report_ids ri
+    JOIN reports r ON r.id = ri.reports_id
+    """
+)
+
+SELECT_INSIGHT_IS_USE = text(
+    """
+    WITH report_ids AS (
+        SELECT reports_id
+        FROM user_reports
+        WHERE id = :user_reports_id AND status = 'DONE'
+    )
+    SELECT 
+        r.insights AS insights_data
+    FROM report_ids ri
+    JOIN reports r ON r.id = ri.reports_id
+    """
+)
+
+
+SELECT_REPORTS_LIST = text(
+    """
+WITH valid_reports AS (
+    SELECT DISTINCT
+        um.user_reports_id
+    FROM 
+        user_missions um
+    WHERE 
+        um.user_plans_id = :user_plans_id
+),
+done_reports AS (
+    SELECT DISTINCT
+        ur.id AS user_reports_id,
+        ur.inspected_at,
+        ur.reports_id
+    FROM 
+        user_reports ur
+    INNER JOIN 
+        valid_reports vr
+    ON 
+        ur.id = vr.user_reports_id
+    WHERE 
+        ur.status = 'DONE'
+)
+SELECT 
+    dr.user_reports_id,
+    dr.inspected_at AS created_at,
+    r.title AS title
+FROM 
+    done_reports dr
+INNER JOIN 
+    reports r
+ON 
+    dr.reports_id = r.id
+ORDER BY 
+    r.day ASC;
+    """
+)
