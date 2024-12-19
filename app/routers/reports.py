@@ -1,32 +1,45 @@
-from datetime import date
+from typing import List, Dict
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Header, Depends
 from pydantic import BaseModel
 
-from app.services.report import (
-    get_report,
-    get_report_file_path,
-    get_report_metadata,
+from app.services.reports import (
+    select_wordcloud_data,
+    select_sentence_length_data,
+    select_insight_data,
+    select_cover_data,
+    select_pos_ratio_data,
+    select_speech_act_data,
 )
-from app.services.users import get_current_user
 
 router = APIRouter()
 
 
-class ReportModel(BaseModel):
-    user_id: str
-    start_date: date
-    end_date: date
+@router.get("/cover/data", tags=["User_Report"])
+def get_cover_data(user_reports_id):
+    return select_cover_data(user_reports_id)
 
 
-@router.get("/reports", tags=["Report"])
-async def select_report_metadata(current_user=Depends(get_current_user)):
-    user_id = current_user.get("sub")
-    report_metadata = get_report_metadata(user_id)
-    return report_metadata
+@router.get("/wordcloud/data", tags=["User_Report"])
+def get_wordcloud_data(user_reports_id):
+    return select_wordcloud_data(user_reports_id)
 
 
-@router.get("/reports/{report}/", tags=["Report"])
-async def select_report_pdf(report: str):
-    file_path = get_report_file_path(report)
-    return get_report(file_path)
+@router.get("/sentence_length/data", tags=["User_Report"])
+def get_sentence_length_data(user_reports_id):
+    return select_sentence_length_data(user_reports_id)
+
+
+@router.get("/pos_ratio/data", tags=["User_Report"])
+def get_pos_ratio_data(user_reports_id):
+    return select_pos_ratio_data(user_reports_id)
+
+
+@router.get("/speech_act/data", tags=["User_Report"])
+def get_speech_act_data(user_reports_id):
+    return select_speech_act_data(user_reports_id)
+
+
+@router.get("/insight/data", tags=["User_Report"])
+def get_insight_data(user_reports_id):
+    return select_insight_data(user_reports_id)
