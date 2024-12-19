@@ -140,11 +140,11 @@ def select_insight_data(user_reports_id):
 
 
 # reports list
-def select_list_data(user_id, user_plans_id):
+def select_list_data(user_plans_id):
     """
     주어진 user_plans_id에 대한 user_reports_id 리스트를 반환합니다.
     """
     return execute_select_query(
         query=SELECT_REPORTS_LIST,
-        params={"user_id": user_id, "user_plans_id": user_plans_id},
+        params={"user_plans_id": user_plans_id},
     )
