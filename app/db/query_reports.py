@@ -67,7 +67,7 @@ INNER JOIN reports_data rd
 
 SELECT_WORDCLOUD_DATA = text(
     """
-    SELECT data, insights FROM user_wordcloud
+    SELECT DISTINCT data, insights FROM user_wordcloud
     WHERE user_reports_id = :user_reports_id
     """
 )
@@ -76,7 +76,7 @@ SELECT_WORDCLOUD_DATA = text(
 # violinplot
 SELECT_SENTENCE_LENGTH_DATA = text(
     """
-    SELECT data, insights FROM user_sentence_length
+    SELECT DISTINCT data, insights FROM user_sentence_length
     WHERE user_reports_id = :user_reports_id
     """
 )
@@ -84,7 +84,7 @@ SELECT_SENTENCE_LENGTH_DATA = text(
 # 품사 분류
 SELECT_POS_RATIO_DATA = text(
     """
-    SELECT data, insights FROM user_pos_ratio
+    SELECT DISTINCT data, insights FROM user_pos_ratio
     WHERE user_reports_id = :user_reports_id
     """
 )
@@ -93,7 +93,7 @@ SELECT_POS_RATIO_DATA = text(
 
 SELECT_SPEECH_ACT_DATA = text(
     """
-    SELECT data, insights FROM user_speech_act
+    SELECT DISTINCT data, insights FROM user_speech_act
     WHERE user_reports_id = :user_reports_id
     """
 )
@@ -113,7 +113,7 @@ SELECT_WORDCLOUD_IS_USE = text(
     WITH report_ids AS (
         SELECT reports_id
         FROM user_reports
-        WHERE id = :user_reports_id AND status = 'DONE'
+        WHERE id = :user_reports_id
     )
     SELECT 
         r.wordcloud AS wordcloud_data
@@ -127,7 +127,7 @@ SELECT_SPEECH_ACT_IS_USE = text(
     WITH report_ids AS (
         SELECT reports_id
         FROM user_reports
-        WHERE id = :user_reports_id AND status = 'DONE'
+        WHERE id = :user_reports_id
     )
     SELECT 
         r.speech_act AS speech_act_data
@@ -141,7 +141,7 @@ SELECT_POS_RATIO_IS_USE = text(
     WITH report_ids AS (
         SELECT reports_id
         FROM user_reports
-        WHERE id = :user_reports_id AND status = 'DONE'
+        WHERE id = :user_reports_id
     )
     SELECT 
         r.pos_ratio AS pos_ratio_data
@@ -155,7 +155,7 @@ SELECT_SENTENCE_LENGTH_IS_USE = text(
     WITH report_ids AS (
         SELECT reports_id
         FROM user_reports
-        WHERE id = :user_reports_id AND status = 'DONE'
+        WHERE id = :user_reports_id
     )
     SELECT 
         r.sentence_length AS sentence_length_data
@@ -169,7 +169,7 @@ SELECT_INSIGHT_IS_USE = text(
     WITH report_ids AS (
         SELECT reports_id
         FROM user_reports
-        WHERE id = :user_reports_id AND status = 'DONE'
+        WHERE id = :user_reports_id
     )
     SELECT 
         r.insights AS insights_data
@@ -206,7 +206,7 @@ done_reports AS (
 SELECT 
     dr.user_reports_id,
     dr.inspected_at AS created_at,
-    r.title AS title
+    r.title AS report_title 
 FROM 
     done_reports dr
 INNER JOIN 
