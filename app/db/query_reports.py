@@ -29,7 +29,7 @@ children_data AS (
     SELECT 
         DISTINCT uc.first_name,
         up.user_id
-    FROM user_childrens uc
+    FROM user_children uc
     INNER JOIN user_plans up
         ON uc.id = up.user_childrens_id
     INNER JOIN missions_data md
