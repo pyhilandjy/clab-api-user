@@ -214,6 +214,6 @@ INNER JOIN
 ON 
     dr.reports_id = r.id
 ORDER BY 
-    r.day ASC;
+    r.required_mission_count ASC;
     """
 )
