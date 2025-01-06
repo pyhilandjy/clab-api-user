@@ -1,16 +1,16 @@
-# from sqlalchemy import text
+from sqlalchemy import text
 
-# INSERT_AUDIO_META_DATA = text(
-#     """
-#     INSERT INTO audio_files (user_id, file_name, file_path, created_at) VALUES
-#     (
-#         :user_id,
-#         :file_name,
-#         :file_path,
-#         current_timestamp
-#     )
-#     """
-# )
+INSERT_AUDIO_META_DATA = text(
+    """
+    INSERT INTO audio_files (user_id, file_name, file_path, created_at) VALUES
+    (
+        :user_id,
+        :file_name,
+        :file_path,
+        current_timestamp
+    )
+    """
+)
 
 # SELECT_REPORT_METADATA = text(
 #     """
