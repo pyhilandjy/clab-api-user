@@ -6,32 +6,34 @@ from app.services.audio import (
     create_file_path,
     insert_audio_metadata,
     upload_to_s3,
+    get_record_time,
+    get_total_record_time,
+    update_is_open,
 )
 from app.services.users import get_current_user
 
 router = APIRouter()
 
 
-@router.post("", tags=["Audio"])
+# audio_files의
+@router.post("/audio", tags=["Audio"])
 async def create_upload_file(
-    current_user: dict = Depends(get_current_user),
+    user_missions_id: str,
     audio: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
+        total_record_time = get_total_record_time(user_missions_id)
         user_id = current_user.get("sub")
         file_path = create_file_path(user_id)
         user_name = current_user.get("user_metadata")["full_name"]
         file_name = create_file_name(user_name)
-        metadata = create_audio_metadata(user_id, file_name, file_path[2:])
-        insert_audio_metadata(metadata)
+        record_time = get_record_time(audio)
+        # 3분 이상시 is_open = false
+        update_is_open(total_record_time, record_time, user_missions_id)
+        metadata = create_audio_metadata(user_id, file_name, file_path[2:], record_time)
+        id = insert_audio_metadata(metadata)
         await upload_to_s3(audio, file_path[2:])
-
-        return {"message": "success"}
+        return id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# 상황 태그 database 추가, api 추가
-@router.post("/situation/", tags=["Audio"])
-async def create_audio_situation(situation: str):
-    pass
