@@ -9,7 +9,7 @@ from loguru import logger
 from pydub import AudioSegment
 
 from app.config import settings
-from app.db.query_mvp import (
+from app.db.query import (
     INSERT_AUDIO_META_DATA,
     SELECT_AUDIO_RECORD_TIME,
     UPDATE_USER_MISSION_IS_OPEN,
