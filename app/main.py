@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import reports
+from app.routers import reports, audio, plan
 
 # FastAPI 앱 생성
 app = FastAPI()
@@ -18,6 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(reports.router)
+app.include_router(audio.router)
+app.include_router(plan.router)
 
 # depends api key
 # app.include_router(audio.router, prefix="/audio", dependencies=[Depends(get_api_key)])
