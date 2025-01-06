@@ -9,7 +9,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://clab-fe.vercel.app",
+        "https://talk-d-fe.vercel.app/",
         "http://localhost:3000",
         "http://localhost:3100",
     ],
