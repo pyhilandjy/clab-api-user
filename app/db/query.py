@@ -300,3 +300,30 @@ UPDATE_USER_REPORTS_IS_READ = text(
     WHERE id = :user_reports_id;
     """
 )
+
+
+FIND_NEXT_REPORTS_ID = text(
+    """
+    SELECT ur_next.id AS next_user_reports_id
+    FROM user_reports ur_current
+    JOIN user_reports ur_next 
+    ON ur_current.user_plans_id = ur_next.user_plans_id
+    AND ur_next.report_order = ur_current.report_order + 1
+    WHERE ur_current.id = :user_reports_id;
+    """
+)
+
+UPDATE_NEXT_MISSIONS_STATUS = text(
+    """
+    UPDATE user_missions
+    SET status = :status
+    WHERE user_reports_id = :user_reports_id;
+    """
+)
+
+CHECK_USER_REPORTS_IS_READ = text(
+    """
+    SELECT is_read FROM user_reports
+    WHERE id = :user_reports_id;
+    """
+)

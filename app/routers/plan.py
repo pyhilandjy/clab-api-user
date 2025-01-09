@@ -6,6 +6,7 @@ from app.services.plan import (
     select_missions_reports_list,
     select_user_used_plans,
     patch_user_reports_is_read,
+    patch_user_reports_is_read,
 )
 from app.services.users import get_current_user, fetch_user_name
 
@@ -61,7 +62,7 @@ async def get_user_used_plans(current_user=Depends(get_current_user)):
     return select_user_used_plans(user_id)
 
 
-@router.patch("/reports/{user_reports_id}", tags=["Plan"])
+@router.patch("/reports/is-read/{user_reports_id}", tags=["Plan"])
 async def patch_is_read(user_reports_id):
+    """유저가 report를 읽었을 경우 user_reports의 is_read값 변경, 다음 Missions status ON_PROGRESS"""
     patch_user_reports_is_read(user_reports_id)
-    # user_plans_id로

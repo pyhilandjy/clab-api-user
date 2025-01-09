@@ -15,6 +15,9 @@ from app.db.query import (
     SELECT_USER_USED_PLANS,
     UPDATE_USER_REPORTS_IS_READ,
     USER_REPORTS_ORDER,
+    FIND_NEXT_REPORTS_ID,
+    UPDATE_NEXT_MISSIONS_STATUS,
+    CHECK_USER_REPORTS_IS_READ,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -355,6 +358,24 @@ def select_user_used_plans(user_id):
 
 
 def patch_user_reports_is_read(user_reports_id):
+
+    next_report_id = execute_select_query(
+        query=FIND_NEXT_REPORTS_ID, params={"user_reports_id": user_reports_id}
+    )
+
+    check_is_read = execute_select_query(
+        query=CHECK_USER_REPORTS_IS_READ, params={"user_reports_id": user_reports_id}
+    )
+    next_report_id = str(next_report_id[0].next_user_reports_id)
+    is_read = check_is_read[0]["is_read"]
+    if not is_read:
+        next_report_id = next_report_id
+        status = "ON_PROGRESS"
+        execute_insert_update_query(
+            query=UPDATE_NEXT_MISSIONS_STATUS,
+            params={"user_reports_id": next_report_id, "status": status},
+        )
+
     execute_insert_update_query(
         query=UPDATE_USER_REPORTS_IS_READ, params={"user_reports_id": user_reports_id}
     )
