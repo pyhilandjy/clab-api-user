@@ -13,6 +13,8 @@ from app.db.query import (
     UPDATE_REPORTS_ID_STATUS,
     SELECT_MISSION_REPORT_LIST,
     SELECT_USER_USED_PLANS,
+    UPDATE_USER_REPORTS_IS_READ,
+    USER_REPORTS_ORDER,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -285,14 +287,19 @@ def generate_user_mission_report_mapping(
         for reports_id, missions_list in reports_grouped.items()
     }
 
-    # 가장 낮은 day 합을 가진 reports_id 찾기
-    lowest_day_sum_reports_id = min(group_day_sums, key=group_day_sums.get)
+    # day 합 기준으로 정렬하여 순위(order) 부여
+    sorted_reports = sorted(group_day_sums.items(), key=lambda x: x[1])
+    report_orders = {
+        reports_id: index + 1 for index, (reports_id, _) in enumerate(sorted_reports)
+    }
 
-    # 상태 설정
+    # 상태 설정 및 order 추가
+    lowest_day_sum_reports_id = sorted_reports[0][0]  # 가장 낮은 day 합의 reports_id
     for reports_id, missions_list in reports_grouped.items():
         status = (
             "ON_PROGRESS" if reports_id == lowest_day_sum_reports_id else "NOT_STARTED"
         )
+        report_order = report_orders[reports_id]  # order 값 가져오기
         for mission in missions_list:
             missions_id = str(mission["id"])
             user_missions_id = mission_id_user_mission_id.get(missions_id)
@@ -302,6 +309,7 @@ def generate_user_mission_report_mapping(
                 user_mission_report_mapping[user_missions_id] = {
                     "user_reports_id": user_reports_id,
                     "status": status,
+                    "report_order": report_order,
                 }
 
     return user_mission_report_mapping
@@ -316,7 +324,7 @@ def update_user_missions_with_reports(mapping):
     for user_missions_id, data in mapping.items():
         user_reports_id = data["user_reports_id"]  # user_reports_id 추출
         status = data["status"]  # status 추출
-
+        report_order = data["report_order"]
         execute_insert_update_query(
             query=UPDATE_REPORTS_ID_STATUS,
             params={
@@ -324,6 +332,10 @@ def update_user_missions_with_reports(mapping):
                 "user_reports_id": user_reports_id,
                 "status": status,
             },
+        )
+        execute_insert_update_query(
+            query=USER_REPORTS_ORDER,
+            params={"report_order": report_order, "user_reports_id": user_reports_id},
         )
 
 
@@ -339,4 +351,10 @@ def select_missions_reports_list(user_plans_id):
 def select_user_used_plans(user_id):
     return execute_select_query(
         query=SELECT_USER_USED_PLANS, params={"user_id": user_id}
+    )
+
+
+def patch_user_reports_is_read(user_reports_id):
+    execute_insert_update_query(
+        query=UPDATE_USER_REPORTS_IS_READ, params={"user_reports_id": user_reports_id}
     )

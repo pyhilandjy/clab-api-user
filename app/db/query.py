@@ -166,6 +166,14 @@ UPDATE_REPORTS_ID_STATUS = text(
     """
 )
 
+USER_REPORTS_ORDER = text(
+    """
+    UPDATE user_reports
+    SET report_order = :report_order
+    WHERE id = :user_reports_id
+    """
+)
+
 
 SELECT_MISSION_REPORT_LIST = text(
     """
@@ -281,5 +289,14 @@ SELECT_USER_USED_PLANS = text(
     FROM user_plans up
     JOIN plans p ON up.plans_id = p.id
     WHERE up.user_id = :user_id;
+    """
+)
+
+
+UPDATE_USER_REPORTS_IS_READ = text(
+    """
+    UPDATE user_reports
+    SET is_read = True
+    WHERE id = :user_reports_id;
     """
 )
