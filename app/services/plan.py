@@ -10,7 +10,7 @@ from app.db.query import (
     INSERT_USER_MISSION_START_DATE,
     SELECT_REPORTS,
     INSERT_REPORTS,
-    UPDATE_REPORTS_ID,
+    UPDATE_REPORTS_ID_STATUS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -150,7 +150,6 @@ def insert_user_plan(user_id, plans_id, plan_start_at, plan_end_at, user_childre
 
 def insert_user_missions(user_id, plan_start_at, plan, missions, user_plans_id):
     """미션 데이터를 user_missions 테이블에 삽입하고 mission_id와 user_mission_id를 매핑"""
-    # TODO user_mission 테이블에 user_reports_id 적재로 변경
     mission_to_user_mission = {}
     for mission in missions:
         mission_start_at = (
@@ -270,30 +269,57 @@ def generate_user_mission_report_mapping(
 ):
     user_mission_report_mapping = {}
 
+    # reports_id별로 missions 그룹화
+    reports_grouped = {}
     for mission in missions:
-        missions_id = str(mission["id"])
         reports_id = str(mission["reports_id"])
+        if reports_id not in reports_grouped:
+            reports_grouped[reports_id] = []
+        reports_grouped[reports_id].append(mission)
 
-        user_missions_id = mission_id_user_mission_id.get(missions_id)
-        user_reports_id = reports_id_user_reports_id.get(reports_id)
+    # 각 그룹의 day 합 계산
+    group_day_sums = {
+        reports_id: sum(mission["day"] for mission in missions_list)
+        for reports_id, missions_list in reports_grouped.items()
+    }
 
-        if user_missions_id and user_reports_id:
-            user_mission_report_mapping[user_missions_id] = user_reports_id
+    # 가장 낮은 day 합을 가진 reports_id 찾기
+    lowest_day_sum_reports_id = min(group_day_sums, key=group_day_sums.get)
+
+    # 상태 설정
+    for reports_id, missions_list in reports_grouped.items():
+        status = (
+            "ON_PROGRESS" if reports_id == lowest_day_sum_reports_id else "NOT_STARTED"
+        )
+        for mission in missions_list:
+            missions_id = str(mission["id"])
+            user_missions_id = mission_id_user_mission_id.get(missions_id)
+            user_reports_id = reports_id_user_reports_id.get(reports_id)
+
+            if user_missions_id and user_reports_id:
+                user_mission_report_mapping[user_missions_id] = {
+                    "user_reports_id": user_reports_id,
+                    "status": status,
+                }
 
     return user_mission_report_mapping
 
 
 def update_user_missions_with_reports(mapping):
     """
-    user_missions 테이블의 user_reports_id 필드를 업데이트하는 함수.
+    user_missions 테이블의 user_reports_id와 status 필드를 업데이트하는 함수.
 
-    :param mapping: dict, {user_missions_id: user_reports_id}
+    :param mapping: dict, {user_missions_id: {"user_reports_id": str, "status": str}}
     """
-    for user_missions_id, user_reports_id in mapping.items():
+    for user_missions_id, data in mapping.items():
+        user_reports_id = data["user_reports_id"]  # user_reports_id 추출
+        status = data["status"]  # status 추출
+
         execute_insert_update_query(
-            query=UPDATE_REPORTS_ID,
+            query=UPDATE_REPORTS_ID_STATUS,
             params={
                 "user_missions_id": user_missions_id,
                 "user_reports_id": user_reports_id,
+                "status": status,
             },
         )

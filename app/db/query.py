@@ -157,10 +157,11 @@ INSERT_REPORTS = text(
     """
 )
 
-UPDATE_REPORTS_ID = text(
+UPDATE_REPORTS_ID_STATUS = text(
     """
     UPDATE user_missions
-    SET user_reports_id = :user_reports_id
+    SET user_reports_id = :user_reports_id,
+        status = :status
     WHERE id = :user_missions_id;
     """
 )
@@ -246,6 +247,30 @@ SELECT_MISSION_REPORT_LIST = text(
     ORDER BY 
         sort_order,
         type ASC;
+    """
+)
+
+GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID = text(
+    """
+    SELECT user_reports_id
+    FROM user_missions
+    WHERE id = :user_missions_id;
+    """
+)
+
+CHECK_ALL_USER_MISSIONS_STATUS = text(
+    """
+    SELECT status
+    FROM user_missions
+    WHERE user_reports_id = :user_reports_id;
+    """
+)
+
+UPDATE_USER_REPORT_STATUS = text(
+    """
+    UPDATE user_reports
+    SET status = :status
+    WHERE id = :id;
 
     """
 )
