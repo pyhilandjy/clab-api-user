@@ -8,7 +8,7 @@ from app.services.audio import (
     upload_to_s3,
     get_record_time,
     get_total_record_time,
-    update_is_open,
+    update_user_missions_status,
 )
 from app.services.users import get_current_user
 
@@ -30,7 +30,7 @@ async def create_upload_file(
         file_name = create_file_name(user_name)
         record_time = get_record_time(audio)
         # 3분 이상시 is_open = false
-        update_is_open(total_record_time, record_time, user_missions_id)
+        update_user_missions_status(total_record_time, record_time, user_missions_id)
         metadata = create_audio_metadata(user_id, file_name, file_path[2:], record_time)
         id = insert_audio_metadata(metadata)
         await upload_to_s3(audio, file_path[2:])
