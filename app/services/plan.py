@@ -11,6 +11,8 @@ from app.db.query import (
     SELECT_REPORTS,
     INSERT_REPORTS,
     UPDATE_REPORTS_ID_STATUS,
+    SELECT_MISSION_REPORT_LIST,
+    SELECT_USER_USED_PLANS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -323,3 +325,18 @@ def update_user_missions_with_reports(mapping):
                 "status": status,
             },
         )
+
+
+def select_missions_reports_list(user_plans_id):
+    """
+    user_plans 테이블로 missions, reports 의 id, type, record_time, summation, status, sort_order 반환하는 함수.
+    """
+    return execute_select_query(
+        query=SELECT_MISSION_REPORT_LIST, params={"user_plans_id": user_plans_id}
+    )
+
+
+def select_user_used_plans(user_id):
+    return execute_select_query(
+        query=SELECT_USER_USED_PLANS, params={"user_id": user_id}
+    )

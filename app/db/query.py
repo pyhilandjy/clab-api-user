@@ -274,3 +274,12 @@ UPDATE_USER_REPORT_STATUS = text(
 
     """
 )
+
+SELECT_USER_USED_PLANS = text(
+    """
+    SELECT up.id AS user_plans_id, up.plans_id, p.plan_name
+    FROM user_plans up
+    JOIN plans p ON up.plans_id = p.id
+    WHERE up.user_id = :user_id;
+    """
+)

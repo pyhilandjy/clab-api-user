@@ -1,5 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.services.plan import select_plans, select_plans_id, update_user_plan_mission
+from app.services.plan import (
+    select_plans,
+    select_plans_id,
+    update_user_plan_mission,
+    select_missions_reports_list,
+    select_user_used_plans,
+)
 from app.services.users import get_current_user, fetch_user_name
 
 router = APIRouter()
@@ -42,37 +48,13 @@ async def post_user_plan(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @router.get("/user/plans", tags=["Plan"])
-# async def post_user_plan(current_user=Depends(get_current_user)):
-#     try:
-#         user_id = current_user.get("sub")
-#         if not user_id:
-#             raise HTTPException(status_code=400, detail="Invalid user ID")
-#         user_plan = select_plans_user(user_id)
-#         return user_plan
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+@router.get("/contents/list/{user_plans_id}", tags=["Plan"])
+async def get_missions_reports_list(user_plans_id: str):
+    """missions, reports 의 id, type, record_time, summation, status, sort_order 반환하는 함수."""
+    return select_missions_reports_list(user_plans_id)
 
 
-# @router.get("/user/missions", tags=["Plan"])
-# async def post_user_plan(current_user=Depends(get_current_user)):
-#     try:
-#         user_id = current_user.get("sub")
-#         if not user_id:
-#             raise HTTPException(status_code=400, detail="Invalid user ID")
-#         user_mission = select_user_missions(user_id)
-#         return user_mission
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.get("/user/missions/{user_missions_id}", tags=["Plan"])
-# async def post_user_plan(user_missions_id: str, current_user=Depends(get_current_user)):
-#     try:
-#         user_id = current_user.get("sub")
-#         if not user_id:
-#             raise HTTPException(status_code=400, detail="Invalid user ID")
-#         user_mission = select_user_missions_detail(user_id, user_missions_id)
-#         return user_mission
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+@router.get("/user/plans", tags=["Plan"])
+async def get_user_used_plans(current_user=Depends(get_current_user)):
+    user_id = current_user.get("sub")
+    return select_user_used_plans(user_id)
