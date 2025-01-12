@@ -52,9 +52,7 @@ def format_plan_data(data):
     }
 
     # missions 이미지로 대체
-    missions = [
-        {"title": data["title"], "summation": data["summation"]} for data in data
-    ]
+    missions = [{"title": data["title"], "summary": data["summary"]} for data in data]
 
     # 결과 반환
     return {"plan": plan, "missions": missions}
@@ -344,7 +342,7 @@ def update_user_missions_with_reports(mapping):
 
 def select_missions_reports_list(user_plans_id):
     """
-    user_plans 테이블로 missions, reports 의 id, type, record_time, summation, status, sort_order 반환하는 함수.
+    user_plans 테이블로 missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수.
     """
     return execute_select_query(
         query=SELECT_MISSION_REPORT_LIST, params={"user_plans_id": user_plans_id}

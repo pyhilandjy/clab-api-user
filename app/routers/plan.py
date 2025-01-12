@@ -52,7 +52,7 @@ async def post_user_plan(
 
 @router.get("/contents/list/{user_plans_id}", tags=["Plan"])
 async def get_missions_reports_list(user_plans_id: str):
-    """missions, reports 의 id, type, record_time, summation, status, sort_order 반환하는 함수."""
+    """missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수."""
     return select_missions_reports_list(user_plans_id)
 
 

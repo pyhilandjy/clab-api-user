@@ -33,6 +33,7 @@ SELECT_PLANS = text(
     SELECT 
         p.id, 
         p.plan_name,
+        p.summary,
         (SELECT COUNT(*) FROM missions m WHERE m.plans_id = p.id) AS missions_count,
         (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count
     FROM plans p
@@ -43,7 +44,7 @@ SELECT_PLANS = text(
 # request Param으로 planId를 넘겨받아, response로 상세정보(플랜 설명, 추천월령, 기간정보, 미션목록(미션 설명포함))를 조회하는 api
 SELECT_PLAN_MISSION = text(
     """
-    SELECT p.description, p.start_age_month, p.end_age_month, p.schedule, m.title, m.summation
+    SELECT p.description, p.start_age_month, p.end_age_month, p.schedule, m.title, m.summary
     FROM plans p
     LEFT JOIN missions m ON m.plans_id = :plans_id
     WHERE p.id = :plans_id;
@@ -123,7 +124,7 @@ SELECT_USER_MISSION_DETAIL = text(
     m.day,
     m.title,
     m.message,
-    m.summation
+    m.summary
     from
     user_missions um
     join missions m on um.missions_id = m.id
@@ -136,7 +137,7 @@ SELECT_USER_MISSION_DETAIL = text(
     m.day,
     m.title,
     m.message,
-    m.summation
+    m.summary
     order by
     day asc;
     """
@@ -181,7 +182,7 @@ SELECT_MISSION_REPORT_LIST = text(
         SELECT DISTINCT
             um.id AS user_missions_id,
             missions.title AS mission_title,
-            missions.summation AS mission_summation,
+            missions.summary AS mission_summary,
             um.status AS user_mission_status,
             ur.id AS user_reports_id,
             ur.status AS user_report_status,
@@ -220,7 +221,7 @@ SELECT_MISSION_REPORT_LIST = text(
             'mission' AS type,
             om.mission_row,
             COALESCE(ats.total_record_time, 0) AS record_time,
-            om.mission_summation AS summation,
+            om.mission_summary AS summary,
             om.user_mission_status AS status,
             om.mission_order AS sort_order
         FROM 
@@ -236,7 +237,7 @@ SELECT_MISSION_REPORT_LIST = text(
             'report' AS type,
             NULL AS mission_row,
             NULL AS record_time,
-            NULL AS summation,
+            NULL AS summary,
             om.user_report_status AS status,
             (SELECT MAX(missions.day) FROM missions WHERE missions.reports_id = om.reports_id) AS sort_order
         FROM 
@@ -247,7 +248,7 @@ SELECT_MISSION_REPORT_LIST = text(
         id,
         type,
         record_time,
-        summation,
+        summary,
         status,
         sort_order
     FROM 
