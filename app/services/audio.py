@@ -131,5 +131,5 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
             if all(status["status"] == "COMPLETED" for status in all_missions_status):
                 execute_insert_update_query(
                     query=UPDATE_USER_REPORT_STATUS,
-                    params={"id": user_reports_id, "status": "ONPROGRESS"},
+                    params={"id": user_reports_id, "status": "ON_PROGRESS"},
                 )
