@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
+from app.config import settings
+from supabase import create_client
 
 from app.db.query import (
     SELECT_PLANS,
@@ -21,9 +23,34 @@ from app.db.query import (
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
+supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+
 
 def select_plans():
-    return execute_select_query(query=SELECT_PLANS)
+    results = execute_select_query(
+        query=SELECT_PLANS,
+    )
+    if results:
+        plan = dict(results[0])
+
+        image_fields = [
+            "thumbnail_image_id",
+        ]
+
+        for field in image_fields:
+            try:
+                if plan.get(field):
+                    plan[f"{field}_url"] = supabase.storage.from_(
+                        "plan-images"
+                    ).get_public_url(plan[field])
+                else:
+                    plan[f"{field}_url"] = None
+            except Exception as e:
+                plan[f"{field}_url"] = None
+            if field in plan:
+                del plan[field]
+        return plan
+    return None
 
 
 def select_plans_id(plans_id, user_name):
@@ -38,7 +65,28 @@ def select_plans_id(plans_id, user_name):
     for row in data:
         if "schedule" in row and "{이름}" in row["schedule"]:
             row["schedule"] = row["schedule"].replace("{이름}", f"{user_name}")
+    if data:
+        plan = dict(data[0])
+        image_fields = [
+            "description_image_id",
+            "schedule_image_id",
+            "thumbnail_image_id",
+        ]
 
+        for field in image_fields:
+            try:
+                if plan.get(field):
+                    plan[f"{field}_url"] = supabase.storage.from_(
+                        "plan-images"
+                    ).get_public_url(plan[field])
+                else:
+                    plan[f"{field}_url"] = None
+            except Exception as e:
+                plan[f"{field}_url"] = None
+            if field in plan:
+                del plan[field]
+        return plan
+    return None
     return format_plan_data(data)
 
 
@@ -282,23 +330,25 @@ def generate_user_mission_report_mapping(
             reports_grouped[reports_id] = []
         reports_grouped[reports_id].append(mission)
 
-    # 각 그룹의 day 합 계산
-    group_day_sums = {
-        reports_id: sum(mission["day"] for mission in missions_list)
+    # 각 그룹의 day 최소값 계산
+    group_day_mins = {
+        reports_id: min(mission["day"] for mission in missions_list)
         for reports_id, missions_list in reports_grouped.items()
     }
 
-    # day 합 기준으로 정렬하여 순위(order) 부여
-    sorted_reports = sorted(group_day_sums.items(), key=lambda x: x[1])
+    # day 최소값 기준으로 정렬하여 순위(order) 부여
+    sorted_reports = sorted(group_day_mins.items(), key=lambda x: x[1])
     report_orders = {
         reports_id: index + 1 for index, (reports_id, _) in enumerate(sorted_reports)
     }
 
     # 상태 설정 및 order 추가
-    lowest_day_sum_reports_id = sorted_reports[0][0]  # 가장 낮은 day 합의 reports_id
+    lowest_day_min_reports_id = sorted_reports[0][
+        0
+    ]  # 가장 낮은 day 최소값의 reports_id
     for reports_id, missions_list in reports_grouped.items():
         status = (
-            "ON_PROGRESS" if reports_id == lowest_day_sum_reports_id else "NOT_STARTED"
+            "ON_PROGRESS" if reports_id == lowest_day_min_reports_id else "NOT_STARTED"
         )
         report_order = report_orders[reports_id]  # order 값 가져오기
         for mission in missions_list:
@@ -367,13 +417,12 @@ def patch_user_reports_is_read(user_reports_id):
     next_report_id = str(next_report_id[0].next_user_reports_id)
     is_read = check_is_read[0]["is_read"]
     if not is_read:
-        next_report_id = next_report_id
+        execute_insert_update_query(
+            query=UPDATE_USER_REPORTS_IS_READ,
+            params={"user_reports_id": user_reports_id},
+        )
         status = "ON_PROGRESS"
         execute_insert_update_query(
             query=UPDATE_NEXT_MISSIONS_STATUS,
             params={"user_reports_id": next_report_id, "status": status},
         )
-
-    execute_insert_update_query(
-        query=UPDATE_USER_REPORTS_IS_READ, params={"user_reports_id": user_reports_id}
-    )
