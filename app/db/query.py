@@ -35,7 +35,8 @@ SELECT_PLANS = text(
         p.plan_name,
         p.summary,
         (SELECT COUNT(*) FROM missions m WHERE m.plans_id = p.id) AS missions_count,
-        (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count
+        (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count,
+        p.thumbnail_image_id
     FROM plans p
     WHERE p.status = 'active'
     ORDER BY p.created_at DESC;
@@ -44,7 +45,7 @@ SELECT_PLANS = text(
 # request Param으로 planId를 넘겨받아, response로 상세정보(플랜 설명, 추천월령, 기간정보, 미션목록(미션 설명포함))를 조회하는 api
 SELECT_PLAN_MISSION = text(
     """
-    SELECT p.description, p.start_age_month, p.end_age_month, p.schedule, m.title, m.summary
+    SELECT p.description, p.start_age_month, p.end_age_month, p.schedule, m.title, m.summary, p.thumbnail_image_id, p.description_image_id, p.schedule_image_id
     FROM plans p
     LEFT JOIN missions m ON m.plans_id = :plans_id
     WHERE p.id = :plans_id;
