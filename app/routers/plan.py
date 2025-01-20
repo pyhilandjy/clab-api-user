@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from app.services.plan import (
     select_plans,
     select_plans_id,
@@ -35,15 +36,23 @@ async def get_plan(plans_id: str, current_user=Depends(get_current_user)):
     return plan_detail
 
 
-@router.post("/plans/{plan_id}", tags=["Plan"])
+class PlanPostRequest(BaseModel):
+    plan_id: str
+    user_children_id: str
+
+
+@router.post("/plans", tags=["Plan"])
 async def post_user_plan(
-    plan_id: str, user_children_id: str, current_user=Depends(get_current_user)
+    payload: PlanPostRequest, current_user=Depends(get_current_user)
 ):
     """user_plans, user_missions, user_reports insert"""
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(status_code=400, detail="Invalid user ID")
+        payload = payload.model_dump()
+        plan_id = payload.get("plan_id")
+        user_children_id = payload.get("user_children_id")
         update_user_plan_mission(user_id, plan_id, user_children_id)
         return {"message": "User plan updated successfully"}
     except Exception as e:
