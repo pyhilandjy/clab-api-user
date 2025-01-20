@@ -45,10 +45,47 @@ SELECT_PLANS = text(
 # request Param으로 planId를 넘겨받아, response로 상세정보(플랜 설명, 추천월령, 기간정보, 미션목록(미션 설명포함))를 조회하는 api
 SELECT_PLAN_MISSION = text(
     """
-    SELECT p.description, p.start_age_month, p.end_age_month, p.schedule, m.title, m.summary, p.thumbnail_image_id, p.description_image_id, p.schedule_image_id, p.plan_name
-    FROM plans p
-    LEFT JOIN missions m ON m.plans_id = :plans_id
-    WHERE p.id = :plans_id;
+SELECT 
+    p.description, 
+    p.start_age_month, 
+    p.end_age_month, 
+    p.schedule, 
+    p.thumbnail_image_id, 
+    p.description_image_id, 
+    p.schedule_image_id, 
+    p.plan_name,
+    COALESCE(r.report_count, 0) AS report_count,
+    COALESCE(m_count.mission_count, 0) AS mission_count
+FROM 
+    plans p
+LEFT JOIN 
+    missions m 
+ON 
+    m.plans_id = p.id
+LEFT JOIN (
+    SELECT 
+        plans_id, 
+        COUNT(*) AS report_count
+    FROM 
+        reports
+    GROUP BY 
+        plans_id
+) r 
+ON 
+    r.plans_id = p.id
+LEFT JOIN (
+    SELECT 
+        plans_id, 
+        COUNT(*) AS mission_count
+    FROM 
+        missions
+    GROUP BY 
+        plans_id
+) m_count
+ON 
+    m_count.plans_id = p.id
+WHERE 
+    p.id = :plans_id;
     """
 )
 
