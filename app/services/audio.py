@@ -108,7 +108,7 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
     if updated_time >= 180:
         status = "COMPLETED"
     elif 0 < updated_time < 180:
-        status = "IN_PROGRESS"
+        status = "ON_PROGRESS"
     else:
         return
 
