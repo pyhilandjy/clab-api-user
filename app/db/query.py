@@ -216,30 +216,54 @@ USER_REPORTS_ORDER = text(
 
 SELECT_MISSION_REPORT_LIST = text(
     """
-    WITH ordered_missions AS (
-        SELECT DISTINCT
-            um.id AS user_missions_id,
-            missions.title AS mission_title,
-            missions.summary AS mission_summary,
-            um.status AS user_mission_status,
-            ur.id AS user_reports_id,
-            ur.status AS user_report_status,
-            reports.title AS report_title,
-            missions.reports_id,
-            missions.day AS mission_order,
-            ROW_NUMBER() OVER (PARTITION BY missions.reports_id ORDER BY missions.day) AS mission_row
+    WITH user_related_plans AS (
+        SELECT
+            up.id AS user_plans_id,
+            up.user_id,
+            up.plans_id,
+            up.user_children_id AS user_children_id,
+            plans.plan_name
         FROM 
-            missions
+            user_plans up
         JOIN 
-            user_missions um ON um.missions_id = missions.id
-        LEFT JOIN 
-            reports ON missions.reports_id = reports.id
-        LEFT JOIN 
-            user_reports ur ON ur.reports_id = reports.id
-        JOIN 
-            user_plans up ON missions.plans_id = up.plans_id
+            plans ON up.plans_id = plans.id
         WHERE 
             up.id = :user_plans_id
+    ),
+    user_mission_data AS (
+        SELECT DISTINCT
+            um.id AS user_missions_id,
+            um.status AS user_mission_status,
+            um.user_plans_id,
+            urp.user_children_id,
+            urp.plan_name,
+            missions.id AS mission_id,
+            missions.title AS mission_title,
+            missions.summary AS mission_summary,
+            missions.day AS mission_order,
+            missions.reports_id
+        FROM 
+            user_missions um
+        JOIN 
+            missions ON um.missions_id = missions.id
+        JOIN 
+            user_related_plans urp ON um.user_plans_id = urp.user_plans_id
+    ),
+    user_report_data AS (
+        SELECT DISTINCT
+            ur.id AS user_reports_id,
+            ur.status AS user_report_status,
+            ur.reports_id,
+            ur.user_plans_id,
+            urp.user_children_id,
+            urp.plan_name,
+            reports.title AS report_title
+        FROM 
+            user_reports ur
+        JOIN 
+            reports ON ur.reports_id = reports.id
+        JOIN 
+            user_related_plans urp ON ur.user_plans_id = urp.user_plans_id
     ),
     audio_time_sum AS (
         SELECT 
@@ -251,49 +275,50 @@ SELECT_MISSION_REPORT_LIST = text(
             audio_files.user_missions_id
     ),
     combined_data AS (
-        SELECT DISTINCT
-            om.mission_title AS title,
-            om.user_reports_id,
-            om.user_missions_id AS id,
-            om.mission_order,
+        SELECT
+            umd.user_missions_id AS id,
+            umd.mission_title AS title,
+            umd.mission_summary AS summary,
+            umd.user_mission_status AS status,
             'mission' AS type,
-            om.mission_row,
+            umd.mission_order AS sort_order,
             COALESCE(ats.total_record_time, 0) AS record_time,
-            om.mission_summary AS summary,
-            om.user_mission_status AS status,
-            om.mission_order AS sort_order
+            umd.user_children_id,
+            umd.plan_name
         FROM 
-            ordered_missions om
+            user_mission_data umd
         LEFT JOIN 
-            audio_time_sum ats ON om.user_missions_id = ats.user_missions_id
+            audio_time_sum ats ON umd.user_missions_id = ats.user_missions_id
         UNION ALL
-        SELECT DISTINCT ON (om.user_reports_id)
-            om.report_title AS title,
-            om.user_reports_id,
-            om.user_reports_id AS id,
-            (SELECT MAX(missions.day) FROM missions WHERE missions.reports_id = om.reports_id) AS mission_order,
-            'report' AS type,
-            NULL AS mission_row,
-            NULL AS record_time,
+        SELECT
+            urd.user_reports_id AS id,
+            urd.report_title AS title,
             NULL AS summary,
-            om.user_report_status AS status,
-            (SELECT MAX(missions.day) FROM missions WHERE missions.reports_id = om.reports_id) AS sort_order
+            urd.user_report_status AS status,
+            'report' AS type,
+            (SELECT MAX(day) 
+            FROM missions 
+            WHERE missions.reports_id = urd.reports_id) AS sort_order,
+            NULL AS record_time,
+            urd.user_children_id,
+            urd.plan_name
         FROM 
-            ordered_missions om
+            user_report_data urd
     )
     SELECT DISTINCT
-        title,
         id,
+        title,
         type,
-        record_time,
         summary,
         status,
-        sort_order
+        sort_order,
+        record_time,
+        user_children_id,
+        plan_name in the final output
     FROM 
         combined_data
     ORDER BY 
-        sort_order,
-        type ASC;
+        sort_order, type ASC;
     """
 )
 
