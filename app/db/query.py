@@ -300,7 +300,7 @@ SELECT_MISSION_REPORT_LIST = text(
             FROM missions 
             WHERE missions.reports_id = urd.reports_id) AS sort_order,
             NULL AS record_time,
-            urd.user_children_id,
+            urd.user_children_id,
             urd.plan_name
         FROM 
             user_report_data urd
