@@ -53,8 +53,8 @@ async def post_user_plan(
         payload = payload.model_dump()
         plan_id = payload.get("plan_id")
         user_children_id = payload.get("user_children_id")
-        update_user_plan_mission(user_id, plan_id, user_children_id)
-        return {"message": "User plan updated successfully"}
+        user_plans_id = update_user_plan_mission(user_id, plan_id, user_children_id)
+        return user_plans_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

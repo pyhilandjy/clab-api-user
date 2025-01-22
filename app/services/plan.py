@@ -316,6 +316,8 @@ def update_user_plan_mission(user_id, plans_id, user_children_id):
         mission_id_user_mission_id, reports_id_user_reports_id, missions
     )
     update_user_missions_with_reports(user_mission_report_mapping)
+    user_plans_id = {"user_plans_id": user_plans_id}
+    return user_plans_id
 
 
 def generate_user_mission_report_mapping(
