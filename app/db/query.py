@@ -235,7 +235,7 @@ SELECT_MISSION_REPORT_LIST = text(
             um.id AS user_missions_id,
             um.status AS user_mission_status,
             um.user_plans_id,
-            urp.user_children_id,
+            urp.user_children_id,
             urp.plan_name,
             missions.id AS mission_id,
             missions.title AS mission_title,
@@ -255,7 +255,7 @@ SELECT_MISSION_REPORT_LIST = text(
             ur.status AS user_report_status,
             ur.reports_id,
             ur.user_plans_id,
-            urp.user_children_id,
+            urp.user_children_id,
             urp.plan_name,
             reports.title AS report_title
         FROM 
@@ -283,7 +283,7 @@ SELECT_MISSION_REPORT_LIST = text(
             'mission' AS type,
             umd.mission_order AS sort_order,
             COALESCE(ats.total_record_time, 0) AS record_time,
-            umd.user_children_id,
+            umd.user_children_id,
             umd.plan_name
         FROM 
             user_mission_data umd
@@ -314,11 +314,19 @@ SELECT_MISSION_REPORT_LIST = text(
         sort_order,
         record_time,
         user_children_id,
-        plan_name in the final output
+        plan_name
     FROM 
         combined_data
     ORDER BY 
         sort_order, type ASC;
+    """
+)
+
+SELECT_CHILDREN_IMAGE_PATH = text(
+    """
+    SELECT profile_image_path
+    FROM user_children
+    WHERE id = :user_children_id;
     """
 )
 
