@@ -20,6 +20,7 @@ from app.db.query import (
     FIND_NEXT_REPORTS_ID,
     UPDATE_NEXT_MISSIONS_STATUS,
     CHECK_USER_REPORTS_IS_READ,
+    SELECT_CHILDREN_IMAGE_PATH,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -394,9 +395,64 @@ def select_missions_reports_list(user_plans_id):
     """
     user_plans 테이블로 missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수.
     """
-    return execute_select_query(
+    list_page_data = execute_select_query(
         query=SELECT_MISSION_REPORT_LIST, params={"user_plans_id": user_plans_id}
     )
+    list_page_data = [dict(data) for data in list_page_data]
+    user_children_id = list_page_data[0]["user_children_id"]
+    children_image_url = execute_select_query(
+        SELECT_CHILDREN_IMAGE_PATH, params={"user_children_id": user_children_id}
+    )[0]["profile_image_path"]
+
+    # progress 계산
+    completed_missions = [
+        data
+        for data in list_page_data
+        if data["type"] == "mission" and data["status"] == "COMPLETED"
+    ]
+    total_missions = len([data for data in list_page_data if data["type"] == "mission"])
+    progress = (
+        round((len(completed_missions) / total_missions) * 100)
+        if total_missions > 0
+        else 0
+    )
+
+    # 이전 report의 최대 sort_order 추적
+    previous_sort_order = 0
+
+    # 각 데이터에 mission_progress 추가
+    for data in list_page_data:
+        if data["type"] == "report":
+            # 이전 report의 sort_order 이후부터 현재 report의 sort_order까지 확인
+            remaining_missions = [
+                mission
+                for mission in list_page_data
+                if mission["type"] == "mission"
+                and previous_sort_order < mission["sort_order"] <= data["sort_order"]
+                and mission["status"] != "COMPLETED"
+            ]
+            data["mission_progress"] = len(remaining_missions)
+            # 현재 report의 sort_order를 이전 값으로 업데이트
+            previous_sort_order = data["sort_order"]
+        elif data["type"] == "mission":
+            # mission에는 기본값 추가
+            data["mission_progress"] = None
+
+    # page_info 생성
+    page_info = {
+        "user_children_id": list_page_data[0]["user_children_id"],
+        "children_image_url": children_image_url,
+        "plan_name": list_page_data[0]["plan_name"],
+        "progress": progress,
+    }
+
+    # list_data 생성
+    list_data = [
+        {k: v for k, v in data.items() if k not in ["user_children_id", "plan_name"]}
+        for data in list_page_data
+    ]
+
+    return {"page_info": page_info, "list_data": list_data}
 
 
 def select_user_used_plans(user_id):
