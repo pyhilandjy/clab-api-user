@@ -32,25 +32,25 @@ def select_plans():
         query=SELECT_PLANS,
     )
     if results:
-        plan = dict(results[0])
+        plans = []
+        image_fields = ["thumbnail_image_id"]
 
-        image_fields = [
-            "thumbnail_image_id",
-        ]
-
-        for field in image_fields:
-            try:
-                if plan.get(field):
-                    plan[f"{field}_url"] = supabase.storage.from_(
-                        "plan-images"
-                    ).get_public_url(plan[field])
-                else:
+        for result in results:
+            plan = dict(result)
+            for field in image_fields:
+                try:
+                    if plan.get(field):
+                        plan[f"{field}_url"] = supabase.storage.from_(
+                            "plan-images"
+                        ).get_public_url(plan[field])
+                    else:
+                        plan[f"{field}_url"] = None
+                except Exception:
                     plan[f"{field}_url"] = None
-            except Exception as e:
-                plan[f"{field}_url"] = None
-            if field in plan:
-                del plan[field]
-        return plan
+                if field in plan:
+                    del plan[field]
+            plans.append(plan)
+        return plans
     return None
 
 
