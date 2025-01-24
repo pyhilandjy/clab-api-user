@@ -351,7 +351,7 @@ def generate_user_mission_report_mapping(
     ]  # 가장 낮은 day 최소값의 reports_id
     for reports_id, missions_list in reports_grouped.items():
         status = (
-            "ON_PROGRESS" if reports_id == lowest_day_min_reports_id else "NOT_STARTED"
+            "IN_PROGRESS" if reports_id == lowest_day_min_reports_id else "NOT_STARTED"
         )
         report_order = report_orders[reports_id]  # order 값 가져오기
         for mission in missions_list:
@@ -479,7 +479,7 @@ def patch_user_reports_is_read(user_reports_id):
             query=UPDATE_USER_REPORTS_IS_READ,
             params={"user_reports_id": user_reports_id},
         )
-        status = "ON_PROGRESS"
+        status = "IN_PROGRESS"
         execute_insert_update_query(
             query=UPDATE_NEXT_MISSIONS_STATUS,
             params={"user_reports_id": next_report_id, "status": status},
