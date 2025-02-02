@@ -7,7 +7,7 @@ INSERT_AUDIO_META_DATA = text(
         :user_id,
         :file_name,
         :file_path,
-        record_time
+        :record_time
     ) RETURNING id
     """
 )
