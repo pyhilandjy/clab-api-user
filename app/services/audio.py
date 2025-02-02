@@ -97,6 +97,8 @@ def get_total_record_time(user_missions_id: str):
     total_record_time = execute_select_query(
         query=SELECT_AUDIO_RECORD_TIME, params={"user_missions_id": user_missions_id}
     )
+    if not total_record_time:
+        return 0
     return total_record_time[0].total_record_time
 
 
@@ -121,7 +123,8 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
         user_reports_id = execute_select_query(
             query=GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
             params={"user_missions_id": user_missions_id},
-        ).get("user_reports_id")
+        )
+        user_reports_id = str(user_reports_id[0].user_reports_id)
 
         if user_reports_id:
             all_missions_status = execute_select_query(
