@@ -2,12 +2,13 @@ from sqlalchemy import text
 
 INSERT_AUDIO_META_DATA = text(
     """
-    INSERT INTO audio_files (user_id, file_name, file_path, record_time) VALUES
+    INSERT INTO audio_files (user_id, file_name, file_path, record_time, user_missions_id) VALUES
     (
         :user_id,
         :file_name,
         :file_path,
-        :record_time
+        :record_time,
+        :user_missions_id
     ) RETURNING id
     """
 )
@@ -335,6 +336,13 @@ GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID = text(
     SELECT user_reports_id
     FROM user_missions
     WHERE id = :user_missions_id;
+    """
+)
+
+GET_USER_MISSIONS_DATA = text(
+    """
+    SELECT * FROM user_missions
+    WHERE user_missions.id = :user_missions_id;
     """
 )
 

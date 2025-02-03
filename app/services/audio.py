@@ -16,6 +16,7 @@ from app.db.query import (
     GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
     CHECK_ALL_USER_MISSIONS_STATUS,
     UPDATE_USER_REPORT_STATUS,
+    GET_USER_MISSIONS_DATA,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -42,7 +43,11 @@ def create_file_path(user_id):
 
 
 def create_audio_metadata(
-    user_id: str, file_name: str, file_path: str, record_time: int
+    user_id: str,
+    file_name: str,
+    file_path: str,
+    record_time: int,
+    user_missions_id: str,
 ):
     """오디오 파일 메타데이터 생성"""
     return {
@@ -50,6 +55,7 @@ def create_audio_metadata(
         "file_name": file_name,
         "file_path": file_path,
         "record_time": record_time,
+        "user_missions_id": user_missions_id,
     }
 
 
@@ -65,19 +71,24 @@ def insert_audio_metadata(metadata: dict):
 async def upload_to_s3(audio: UploadFile, file_path):
     """m4a 파일을 S3에 저장"""
     try:
+        audio.file.seek(0)
         audio_content = await audio.read()
         audio_stream = BytesIO(audio_content)
 
-        # S3에 업로드
-        s3.upload_fileobj(audio_stream, settings.bucket_name, file_path)
+        s3.upload_fileobj(audio_stream, bucket_name, file_path)
+
     except NoCredentialsError:
         return {"error": "Credentials not available"}
+
     except ClientError as e:
-        return {"error": str(e)}
+        return {"error": f"ClientError: {str(e)}"}
+
     except Exception as e:
-        return {"error": str(e)}
+        print(f" 예외 발생: {str(e)}")
+        return {"error": f"Exception: {str(e)}"}
+
     else:
-        logger.info(f"File uploaded to S3: {file_path}")
+        print(f" S3 업로드 성공: {file_path}")
         return {"message": "File uploaded successfully"}
 
 
@@ -85,6 +96,7 @@ def get_record_time(audio):
     """M4A 파일의 재생 시간을 가져옴"""
     try:
         audio_data = audio.file.read()
+        audio.file.seek(0)
         audio_segment = AudioSegment.from_file(io.BytesIO(audio_data))
         duration_seconds = len(audio_segment) / 1000.0
         return round(duration_seconds)
@@ -136,3 +148,11 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
                     query=UPDATE_USER_REPORT_STATUS,
                     params={"id": user_reports_id, "status": "IN_PROGRESS"},
                 )
+
+
+def user_missions_data(user_missions_id):
+    # 쿼리 수정 필요
+    return execute_select_query(
+        query=GET_USER_MISSIONS_DATA,
+        params={"user_missions_id": user_missions_id},
+    )

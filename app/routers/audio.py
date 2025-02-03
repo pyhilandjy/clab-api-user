@@ -31,7 +31,9 @@ async def create_upload_file(
         record_time = get_record_time(audio)
         # 3분 이상시 is_open = false
         update_user_missions_status(total_record_time, record_time, user_missions_id)
-        metadata = create_audio_metadata(user_id, file_name, file_path[2:], record_time)
+        metadata = create_audio_metadata(
+            user_id, file_name, file_path[2:], record_time, user_missions_id
+        )
         id = insert_audio_metadata(metadata)
         await upload_to_s3(audio, file_path[2:])
         return id
