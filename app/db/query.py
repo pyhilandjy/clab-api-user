@@ -341,8 +341,22 @@ GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID = text(
 
 GET_USER_MISSIONS_DATA = text(
     """
-    SELECT * FROM user_missions
-    WHERE user_missions.id = :user_missions_id;
+    SELECT 
+        p.plan_name, 
+        m.title, 
+        uc.profile_image_path
+    FROM 
+        user_missions um
+    JOIN 
+        missions m ON um.missions_id = m.id
+    JOIN 
+        user_plans up ON um.user_plans_id = up.id
+    JOIN 
+        plans p ON up.plans_id = p.id
+    JOIN 
+        user_children uc ON up.user_children_id = uc.id
+    WHERE 
+        um.id = :user_missions_id;
     """
 )
 

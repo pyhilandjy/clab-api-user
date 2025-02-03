@@ -16,7 +16,6 @@ from app.db.query import (
     GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
     CHECK_ALL_USER_MISSIONS_STATUS,
     UPDATE_USER_REPORT_STATUS,
-    GET_USER_MISSIONS_DATA,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -148,11 +147,3 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
                     query=UPDATE_USER_REPORT_STATUS,
                     params={"id": user_reports_id, "status": "IN_PROGRESS"},
                 )
-
-
-def user_missions_data(user_missions_id):
-    # 쿼리 수정 필요
-    return execute_select_query(
-        query=GET_USER_MISSIONS_DATA,
-        params={"user_missions_id": user_missions_id},
-    )

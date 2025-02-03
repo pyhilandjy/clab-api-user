@@ -21,6 +21,7 @@ from app.db.query import (
     UPDATE_NEXT_MISSIONS_STATUS,
     CHECK_USER_REPORTS_IS_READ,
     SELECT_CHILDREN_IMAGE_PATH,
+    GET_USER_MISSIONS_DATA,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -484,3 +485,11 @@ def patch_user_reports_is_read(user_reports_id):
             query=UPDATE_NEXT_MISSIONS_STATUS,
             params={"user_reports_id": next_report_id, "status": status},
         )
+
+
+def user_missions_data(user_missions_id):
+    # 쿼리 수정 필요
+    return execute_select_query(
+        query=GET_USER_MISSIONS_DATA,
+        params={"user_missions_id": user_missions_id},
+    )

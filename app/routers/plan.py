@@ -8,6 +8,7 @@ from app.services.plan import (
     select_user_used_plans,
     patch_user_reports_is_read,
     patch_user_reports_is_read,
+    user_missions_data,
 )
 from app.services.users import get_current_user, fetch_user_name
 
@@ -75,3 +76,16 @@ async def get_user_used_plans(current_user=Depends(get_current_user)):
 async def patch_is_read(user_reports_id):
     """유저가 report를 읽었을 경우 user_reports의 is_read값 변경, 다음 Missions status IN_PROGRESS"""
     patch_user_reports_is_read(user_reports_id)
+
+
+@router.get("/missions/{user_missions_id}", tags=["Plan"])
+async def get_audio_file(
+    user_missions_id: str, current_user: dict = Depends(get_current_user)
+):
+    try:
+        user_id = current_user.get("sub")
+        user_name = current_user.get("user_metadata")["full_name"]
+        data = user_missions_data(user_missions_id)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
