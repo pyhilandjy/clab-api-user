@@ -172,7 +172,7 @@ SELECT_INSIGHT_IS_USE = text(
         WHERE id = :user_reports_id
     )
     SELECT 
-        r.insights AS insights_data
+        r.insight AS insights_data
     FROM report_ids ri
     JOIN reports r ON r.id = ri.reports_id
     """
