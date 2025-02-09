@@ -193,7 +193,8 @@ done_reports AS (
     SELECT DISTINCT
         ur.id AS user_reports_id,
         ur.inspected_at,
-        ur.reports_id
+        ur.reports_id,
+        ur.report_order
     FROM 
         user_reports ur
     INNER JOIN 
@@ -206,7 +207,8 @@ done_reports AS (
 SELECT 
     dr.user_reports_id,
     dr.inspected_at AS created_at,
-    r.title AS report_title 
+    r.title AS report_title,
+    dr.report_order
 FROM 
     done_reports dr
 INNER JOIN 
@@ -214,6 +216,6 @@ INNER JOIN
 ON 
     dr.reports_id = r.id
 ORDER BY 
-    r.required_mission_count ASC;
+    dr.report_order ASC;
     """
 )

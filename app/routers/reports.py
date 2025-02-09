@@ -72,4 +72,4 @@ def get_user_reports_list(user_plans_id: str):
         list_data = select_list_data(user_plans_id)
         return list_data
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
