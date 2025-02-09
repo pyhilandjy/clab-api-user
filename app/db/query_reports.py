@@ -31,7 +31,7 @@ children_data AS (
         up.user_id
     FROM user_children uc
     INNER JOIN user_plans up
-        ON uc.id = up.user_childrens_id
+        ON uc.id = up.user_children_id
     INNER JOIN missions_data md
         ON up.id = md.user_plans_id
 ),
