@@ -201,7 +201,7 @@ done_reports AS (
     ON 
         ur.id = vr.user_reports_id
     WHERE 
-        ur.status = 'DONE'
+        ur.status = 'COMPLETED'
 )
 SELECT 
     dr.user_reports_id,
