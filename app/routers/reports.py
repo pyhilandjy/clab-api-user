@@ -63,7 +63,7 @@ def get_insight_data(user_reports_id):
     return select_insight_data(user_reports_id)
 
 
-@router.get("/reposts/list/{user_plans_id}", tags=["User_Report"])
+@router.get("/reports/list/{user_plans_id}", tags=["User_Report"])
 def get_user_reports_list(user_plans_id: str):
     try:
         # user_id = current_user.get("sub")
