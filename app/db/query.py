@@ -39,7 +39,7 @@ SELECT_PLANS = text(
         (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count,
         p.thumbnail_image_id
     FROM plans p
-    WHERE p.status = 'active'
+    WHERE p.status = 'IN_PROGRESS'
     ORDER BY p.created_at DESC;
     """
 )
@@ -128,59 +128,59 @@ INSERT_USER_MISSION_START_DATE = text(
     """
 )
 
-SELECT_USER_MISSION = text(
-    """
-    select
-    user_missions.id,
-    user_missions.start_at,
-    user_missions.created_at,
-    missions.day,
-    missions.title,
-    coalesce(sum(af.record_time), 0) as play_seconds,
-    count(af.record_time) as counts
-    from
-    user_missions
-    join missions on user_missions.missions_id = missions.id
-    left join audio_files af on user_missions.id = af.user_missions_id
-    where
-    user_missions.user_id = :user_id
-    and user_missions.status = 'active'
-    group by
-    user_missions.id,
-    missions.day,
-    missions.title
-    order by
-    day asc;
-    """
-)
+# SELECT_USER_MISSION = text(
+#     """
+#     select
+#     user_missions.id,
+#     user_missions.start_at,
+#     user_missions.created_at,
+#     missions.day,
+#     missions.title,
+#     coalesce(sum(af.record_time), 0) as play_seconds,
+#     count(af.record_time) as counts
+#     from
+#     user_missions
+#     join missions on user_missions.missions_id = missions.id
+#     left join audio_files af on user_missions.id = af.user_missions_id
+#     where
+#     user_missions.user_id = :user_id
+#     and user_missions.status = 'IN_PROGRESS'
+#     group by
+#     user_missions.id,
+#     missions.day,
+#     missions.title
+#     order by
+#     day asc;
+#     """
+# )
 
-SELECT_USER_MISSION_DETAIL = text(
-    """
-    select
-    um.id,
-    um.start_at,
-    um.created_at,
-    m.day,
-    m.title,
-    m.message,
-    m.summary
-    from
-    user_missions um
-    join missions m on um.missions_id = m.id
-    where
-    um.user_id = :user_id
-    and um.status = 'active'
-    and um.id = :user_missions_id
-    group by
-    um.id,
-    m.day,
-    m.title,
-    m.message,
-    m.summary
-    order by
-    day asc;
-    """
-)
+# SELECT_USER_MISSION_DETAIL = text(
+#     """
+#     select
+#     um.id,
+#     um.start_at,
+#     um.created_at,
+#     m.day,
+#     m.title,
+#     m.message,
+#     m.summary
+#     from
+#     user_missions um
+#     join missions m on um.missions_id = m.id
+#     where
+#     um.user_id = :user_id
+#     and um.status = 'IN_PROGRESS'
+#     and um.id = :user_missions_id
+#     group by
+#     um.id,
+#     m.day,
+#     m.title,
+#     m.message,
+#     m.summary
+#     order by
+#     day asc;
+#     """
+# )
 
 SELECT_REPORTS = text(
     """
