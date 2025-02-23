@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("/plans", tags=["Plan"])
 async def get_plans():
     """
-    plan 데이터를 가져오는 엔드포인트
+    plan이 INPROGRESS인 데이터를 가져오는 엔드포인트
     """
     plan = select_plans()
     if not plan:

@@ -39,7 +39,7 @@ SELECT_PLANS = text(
         (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count,
         p.thumbnail_image_id
     FROM plans p
-    WHERE p.status = 'IN_PROGRESS'
+    WHERE p.status = 'active'
     ORDER BY p.created_at DESC;
     """
 )
