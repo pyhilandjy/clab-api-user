@@ -344,11 +344,15 @@ GET_USER_MISSIONS_DATA = text(
     SELECT 
         p.plan_name, 
         m.title, 
-        uc.profile_image_path
+        uc.profile_image_path,
+        COALESCE(SUM(af.record_time), 0) AS record_time,
+        um.status AS user_mission_status
     FROM 
         user_missions um
     JOIN 
         missions m ON um.missions_id = m.id
+    JOIN
+        audio_files af ON um.id = af.user_missions_id
     JOIN 
         user_plans up ON um.user_plans_id = up.id
     JOIN 
@@ -356,7 +360,9 @@ GET_USER_MISSIONS_DATA = text(
     JOIN 
         user_children uc ON up.user_children_id = uc.id
     WHERE 
-        um.id = :user_missions_id;
+        um.id = :user_missions_id
+    GROUP BY 
+        p.plan_name, m.title, uc.profile_image_path, um.status;
     """
 )
 
