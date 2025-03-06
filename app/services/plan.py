@@ -473,9 +473,8 @@ def patch_user_reports_is_read(user_reports_id):
     check_is_read = execute_select_query(
         query=CHECK_USER_REPORTS_IS_READ, params={"user_reports_id": user_reports_id}
     )
-    next_report_id = str(next_report_id[0].next_user_reports_id)
     is_read = check_is_read[0]["is_read"]
-    if not is_read:
+    if next_report_id and not is_read:
         execute_insert_update_query(
             query=UPDATE_USER_REPORTS_IS_READ,
             params={"user_reports_id": user_reports_id},
@@ -484,6 +483,11 @@ def patch_user_reports_is_read(user_reports_id):
         execute_insert_update_query(
             query=UPDATE_NEXT_MISSIONS_STATUS,
             params={"user_reports_id": next_report_id, "status": status},
+        )
+    elif not next_report_id and not is_read:
+        execute_insert_update_query(
+            query=UPDATE_USER_REPORTS_IS_READ,
+            params={"user_reports_id": user_reports_id},
         )
 
 
