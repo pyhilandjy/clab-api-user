@@ -449,11 +449,16 @@ def select_missions_reports_list(user_plans_id):
         "children_image_url": children_image_url,
         "plan_name": list_page_data[0]["plan_name"],
         "progress": progress,
+        "plan_status": list_page_data[0]["plan_status"],  # plan_status 추가
     }
 
     # list_data 생성
     list_data = [
-        {k: v for k, v in data.items() if k not in ["user_children_id", "plan_name"]}
+        {
+            k: v
+            for k, v in data.items()
+            if k not in ["user_children_id", "plan_name", "plan_status"]
+        }
         for data in list_page_data
     ]
 

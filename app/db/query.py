@@ -223,7 +223,8 @@ SELECT_MISSION_REPORT_LIST = text(
             up.user_id,
             up.plans_id,
             up.user_children_id AS user_children_id,
-            plans.plan_name
+            plans.plan_name,
+            up.status AS plan_status
         FROM 
             user_plans up
         JOIN 
@@ -319,7 +320,8 @@ SELECT_MISSION_REPORT_LIST = text(
         record_time,
         is_read,
         user_children_id,
-        plan_name
+        plan_name,
+        (SELECT plan_status FROM user_related_plans LIMIT 1) AS plan_status
     FROM 
         combined_data
     ORDER BY 
