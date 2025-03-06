@@ -254,6 +254,7 @@ SELECT_MISSION_REPORT_LIST = text(
         SELECT DISTINCT
             ur.id AS user_reports_id,
             ur.status AS user_report_status,
+            ur.is_read,
             ur.reports_id,
             ur.user_plans_id,
             urp.user_children_id,
@@ -284,6 +285,7 @@ SELECT_MISSION_REPORT_LIST = text(
             'mission' AS type,
             umd.mission_order AS sort_order,
             COALESCE(ats.total_record_time, 0) AS record_time,
+            NULL AS is_read,
             umd.user_children_id,
             umd.plan_name
         FROM 
@@ -301,6 +303,7 @@ SELECT_MISSION_REPORT_LIST = text(
             FROM missions 
             WHERE missions.reports_id = urd.reports_id) AS sort_order,
             NULL AS record_time,
+            urd.is_read,
             urd.user_children_id,
             urd.plan_name
         FROM 
@@ -314,6 +317,7 @@ SELECT_MISSION_REPORT_LIST = text(
         status,
         sort_order,
         record_time,
+        is_read,
         user_children_id,
         plan_name
     FROM 
@@ -322,6 +326,7 @@ SELECT_MISSION_REPORT_LIST = text(
         sort_order, type ASC;
     """
 )
+
 
 SELECT_CHILDREN_IMAGE_PATH = text(
     """
