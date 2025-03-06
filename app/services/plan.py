@@ -22,6 +22,8 @@ from app.db.query import (
     CHECK_USER_REPORTS_IS_READ,
     SELECT_CHILDREN_IMAGE_PATH,
     GET_USER_MISSIONS_DATA,
+    FIND_USER_PLANS_ID,
+    UPDATE_USER_PLANS_STATUS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -465,7 +467,6 @@ def select_user_used_plans(user_id):
 
 
 def patch_user_reports_is_read(user_reports_id):
-
     next_report_id = execute_select_query(
         query=FIND_NEXT_REPORTS_ID, params={"user_reports_id": user_reports_id}
     )
@@ -488,6 +489,15 @@ def patch_user_reports_is_read(user_reports_id):
         execute_insert_update_query(
             query=UPDATE_USER_REPORTS_IS_READ,
             params={"user_reports_id": user_reports_id},
+        )
+        user_plans_id = execute_select_query(
+            query=FIND_USER_PLANS_ID, params={"user_reports_id": user_reports_id}
+        )[0]["user_plans_id"]
+        user_plans_id = str(user_plans_id)
+        status = "COMPLETED"
+        execute_insert_update_query(
+            query=UPDATE_USER_PLANS_STATUS,
+            params={"user_plans_id": user_plans_id, "status": status},
         )
 
 

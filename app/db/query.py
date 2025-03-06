@@ -406,6 +406,20 @@ UPDATE_USER_REPORTS_IS_READ = text(
     """
 )
 
+UPDATE_USER_PLANS_STATUS = text(
+    """
+    UPDATE user_plans
+    SET status = :status
+    WHERE id = :user_plans_id;
+    """
+)
+
+FIND_USER_PLANS_ID = text(
+    """
+    SELECT user_plans_id FROM user_reports
+    WHERE id = :user_reports_id
+    """
+)
 
 FIND_NEXT_REPORTS_ID = text(
     """
