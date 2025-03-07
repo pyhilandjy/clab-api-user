@@ -516,8 +516,9 @@ def user_missions_data(user_missions_id):
 
 
 def select_plans_demo():
+    plans_id = "1b893728-7d14-4b5c-88ad-895b1d81832b"
     results = execute_select_query(
-        query=SELECT_PLANS_DEMO,
+        query=SELECT_PLANS_DEMO, params={"plans_id": plans_id}
     )
     if results:
         plans = []

@@ -27,6 +27,17 @@ async def get_plans():
     return plan
 
 
+@router.get("/plans/demo", tags=["Plan"])
+async def get_plans():
+    """
+    plan이 INPROGRESS인 데이터를 가져오는 엔드포인트
+    """
+    plan = select_plans_demo()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Files not found")
+    return plan
+
+
 @router.get("/plans/{plans_id}", tags=["Plan"])
 async def get_plan(plans_id: str, current_user=Depends(get_current_user)):
     """
@@ -90,14 +101,3 @@ async def get_audio_file(
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/plans/demo", tags=["Plan"])
-async def get_plans():
-    """
-    plan이 INPROGRESS인 데이터를 가져오는 엔드포인트
-    """
-    plan = select_plans_demo()
-    if not plan:
-        raise HTTPException(status_code=404, detail="Files not found")
-    return plan
