@@ -113,14 +113,48 @@ def get_total_record_time(user_missions_id: str):
     return total_record_time[0].total_record_time
 
 
-# 마지막 미션이 완료가 된 시점에서는 user_reports.status도 COMPLETED로 수정해야함 완료
-# 테스트를 해봐야하는데.. 하기가 힘드네
 def update_user_missions_status(total_record_time, record_time, user_missions_id):
     updated_time = total_record_time + record_time
 
     if updated_time >= 180:
         status = "COMPLETED"
     elif 0 < updated_time < 180:
+        status = "IN_PROGRESS"
+    else:
+        return
+
+    execute_insert_update_query(
+        query=UPDATE_USER_MISSION_STATUS,
+        params={"id": user_missions_id, "status": status},
+    )
+
+    if status == "COMPLETED":
+        user_reports_id = execute_select_query(
+            query=GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
+            params={"user_missions_id": user_missions_id},
+        )
+        user_reports_id = str(user_reports_id[0].user_reports_id)
+
+        if user_reports_id:
+            all_missions_status = execute_select_query(
+                query=CHECK_ALL_USER_MISSIONS_STATUS,
+                params={"user_reports_id": user_reports_id},
+            )
+            if all(status["status"] == "COMPLETED" for status in all_missions_status):
+                execute_insert_update_query(
+                    query=UPDATE_USER_REPORT_STATUS,
+                    params={"id": user_reports_id, "status": "IN_PROGRESS"},
+                )
+
+
+def update_user_missions_status_for_demo(
+    total_record_time, record_time, user_missions_id
+):
+    updated_time = total_record_time + record_time
+
+    if updated_time >= 900:
+        status = "COMPLETED"
+    elif 0 < updated_time < 900:
         status = "IN_PROGRESS"
     else:
         return

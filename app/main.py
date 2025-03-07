@@ -12,6 +12,7 @@ app.add_middleware(
         "https://talk-d-fe.vercel.app",
         "http://localhost:3000",
         "http://localhost:3100",
+        "https://talk-d-demo.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

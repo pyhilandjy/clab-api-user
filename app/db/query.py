@@ -43,6 +43,21 @@ SELECT_PLANS = text(
     ORDER BY p.created_at DESC;
     """
 )
+
+SELECT_PLANS_DEMO = text(
+    """
+    SELECT 
+        p.id, 
+        p.plan_name,
+        p.summary,
+        (SELECT COUNT(*) FROM missions m WHERE m.plans_id = p.id) AS missions_count,
+        (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count,
+        p.thumbnail_image_id
+    FROM plans p
+    WHERE p.id = '1b893728-7d14-4b5c-88ad-895b1d81832b'
+    ORDER BY p.created_at DESC;
+    """
+)
 # request Param으로 planId를 넘겨받아, response로 상세정보(플랜 설명, 추천월령, 기간정보, 미션목록(미션 설명포함))를 조회하는 api
 SELECT_PLAN_MISSION = text(
     """

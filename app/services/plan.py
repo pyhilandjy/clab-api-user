@@ -24,6 +24,7 @@ from app.db.query import (
     GET_USER_MISSIONS_DATA,
     FIND_USER_PLANS_ID,
     UPDATE_USER_PLANS_STATUS,
+    SELECT_PLANS_DEMO,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -512,3 +513,30 @@ def user_missions_data(user_missions_id):
         query=GET_USER_MISSIONS_DATA,
         params={"user_missions_id": user_missions_id},
     )
+
+
+def select_plans_demo():
+    results = execute_select_query(
+        query=SELECT_PLANS_DEMO,
+    )
+    if results:
+        plans = []
+        image_fields = ["thumbnail_image_id"]
+
+        for result in results:
+            plan = dict(result)
+            for field in image_fields:
+                try:
+                    if plan.get(field):
+                        plan[f"{field}_url"] = supabase.storage.from_(
+                            "plan-images"
+                        ).get_public_url(plan[field])
+                    else:
+                        plan[f"{field}_url"] = None
+                except Exception:
+                    plan[f"{field}_url"] = None
+                if field in plan:
+                    del plan[field]
+            plans.append(plan)
+        return plans
+    return None
