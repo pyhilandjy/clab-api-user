@@ -54,7 +54,7 @@ SELECT_PLANS_DEMO = text(
         (SELECT COUNT(*) FROM reports r WHERE r.plans_id = p.id) AS reports_count,
         p.thumbnail_image_id
     FROM plans p
-    WHERE p.id = '1b893728-7d14-4b5c-88ad-895b1d81832b'
+    WHERE p.id = :plans_id
     ORDER BY p.created_at DESC;
     """
 )
@@ -373,7 +373,7 @@ GET_USER_MISSIONS_DATA = text(
         user_missions um
     JOIN 
         missions m ON um.missions_id = m.id
-    JOIN
+    LEFT JOIN
         audio_files af ON um.id = af.user_missions_id
     JOIN 
         user_plans up ON um.user_plans_id = up.id
