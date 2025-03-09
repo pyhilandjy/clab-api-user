@@ -281,7 +281,7 @@ def insert_user_reports(user_id, reports, user_plans_id):
 #         )
 
 
-def update_user_plan_mission(user_id, plans_id, user_children_id):
+def insert_user_plan_mission(user_id, plans_id, user_children_id):
     # 플랜 데이터
     plan = execute_select_query(
         query=SELECT_PLAN,

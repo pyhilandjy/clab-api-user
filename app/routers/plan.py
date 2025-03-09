@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from app.services.plan import (
     select_plans,
     select_plans_id,
-    update_user_plan_mission,
+    insert_user_plan_mission,
     select_missions_reports_list,
     select_user_used_plans,
     patch_user_reports_is_read,
@@ -66,7 +66,7 @@ async def post_user_plan(
         payload = payload.model_dump()
         plan_id = payload.get("plan_id")
         user_children_id = payload.get("user_children_id")
-        user_plans_id = update_user_plan_mission(user_id, plan_id, user_children_id)
+        user_plans_id = insert_user_plan_mission(user_id, plan_id, user_children_id)
         return user_plans_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
