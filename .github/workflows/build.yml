@@ -1,89 +1,106 @@
-name: Build and Deploy Docker Image
+name: Build and Deploy User API
 
 on:
   push:
     branches:
       - main
+      - dev
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: connects-lab/talk.d_api
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      # 1. 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. GitHub Container Registry 로그인
-      - name: Log in to the Container registry
+      - name: Set Environment
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENV=prod" >> $GITHUB_ENV
+            echo "TAG=latest" >> $GITHUB_ENV
+            echo "EC2_HOST=${{ secrets.EC2_HOST_PROD }}" >> $GITHUB_ENV
+            echo "SG_ID=${{ secrets.SG_ID_PROD }}" >> $GITHUB_ENV
+          else
+            echo "ENV=dev" >> $GITHUB_ENV
+            echo "TAG=dev" >> $GITHUB_ENV
+            echo "EC2_HOST=${{ secrets.EC2_HOST_DEV }}" >> $GITHUB_ENV
+            echo "SG_ID=${{ secrets.SG_ID_DEV }}" >> $GITHUB_ENV
+          fi
+
+      - name: Debug Print (Check ENV Values)
+        run: |
+          echo "ENV=${ENV}"
+          echo "TAG=${TAG}"
+          echo "EC2_HOST=${EC2_HOST}"
+          echo "SG_ID=${SG_ID}"
+        env:
+          ENV: ${{ env.ENV }}
+          TAG: ${{ env.TAG }}
+          EC2_HOST: ${{ env.EC2_HOST }}
+          SG_ID: ${{ env.SG_ID }}
+
+      - name: Login to Container registry
         uses: docker/login-action@v1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 3. Docker 이미지 빌드 및 푸시
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/${{ env.IMAGE_NAME }}:latest
+        run: |
+          docker build -t ghcr.io/${{ env.IMAGE_NAME }}:${{ env.TAG }} .
+          docker push ghcr.io/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build # 배포는 빌드가 성공한 후에 실행
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      # 1. GitHub Actions의 IP를 EC2 보안 그룹에 추가 (SSH 인바운드 규칙)
-      - name: Add SSH inbound rule to EC2 security group
+      - name: Add SSH inbound rule
+        run: |
+          echo "Add SSH Rule for SG_ID=${SG_ID}"
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${SG_ID} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $(curl -s https://checkip.amazonaws.com)/32
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          aws ec2 authorize-security-group-ingress \
-            --group-id sg-00238cd34b57d6565 \
-            --protocol tcp \
-            --port 22 \
-            --cidr $(curl -s https://checkip.amazonaws.com)/32
-        # GitHub Actions IP를 보안 그룹에 추가하여 SSH 접근 허용
 
-      # 2. EC2로 배포 작업 수행
       - name: Deploy to EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ubuntu
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           echo "${SSH_PRIVATE_KEY}" > SSH_PRIVATE_KEY.pem
           chmod 600 SSH_PRIVATE_KEY.pem
-          ssh -i SSH_PRIVATE_KEY.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+          echo "Deploy to ${EC2_HOST} with tag ${TAG} and env ${ENV}"
+
+          ssh -i SSH_PRIVATE_KEY.pem -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} << EOF
             cd clab
-            docker pull ghcr.io/connects-lab/talk.d_api:latest
-            docker compose down
-            docker compose up -d
+            docker pull ghcr.io/${{ env.IMAGE_NAME }}:${TAG}
+            TAG=${TAG} ENV=${ENV} docker compose down
+            TAG=${TAG} ENV=${ENV} docker compose up -d --build
           EOF
 
-      # 3. SSH 인바운드 규칙 제거 (보안 그룹에서 SSH 접근 차단)
-      - name: Remove SSH inbound rule from EC2 security group
+          rm -f SSH_PRIVATE_KEY.pem
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ env.EC2_HOST }}
+          TAG: ${{ env.TAG }}
+          ENV: ${{ env.ENV }}
+
+      - name: Remove SSH inbound rule
+        run: |
+          echo "Remove SSH Rule for SG_ID=${SG_ID}"
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${SG_ID} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $(curl -s https://checkip.amazonaws.com)/32
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          aws ec2 revoke-security-group-ingress \
-            --group-id sg-00238cd34b57d6565 \
-            --protocol tcp \
-            --port 22 \
-            --cidr $(curl -s https://checkip.amazonaws.com)/32
