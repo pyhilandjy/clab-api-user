@@ -7,7 +7,6 @@ from app.services.plan import (
     select_missions_reports_list,
     select_user_used_plans,
     patch_user_reports_is_read,
-    patch_user_reports_is_read,
     user_missions_data,
     select_plans_demo,
 )
