@@ -9,6 +9,7 @@ from app.services.plan import (
     patch_user_reports_is_read,
     user_missions_data,
     select_plans_demo,
+    find_owner_id,
 )
 from app.services.users import get_current_user, fetch_user_name
 
@@ -72,8 +73,14 @@ async def post_user_plan(
 
 
 @router.get("/contents/list/{user_plans_id}", tags=["Plan"])
-async def get_missions_reports_list(user_plans_id: str):
+async def get_missions_reports_list(
+    user_plans_id: str, current_user=Depends(get_current_user)
+):
     """missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수."""
+    user_id = current_user.get("sub")
+    owner_id = find_owner_id(user_plans_id)
+    if user_id != str(owner_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
     return select_missions_reports_list(user_plans_id)
 
 

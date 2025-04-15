@@ -25,6 +25,7 @@ from app.db.query import (
     FIND_USER_PLANS_ID,
     UPDATE_USER_PLANS_STATUS,
     SELECT_PLANS_DEMO,
+    FIND_USER_ID_FROM_USER_PLANS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -542,4 +543,13 @@ def select_plans_demo():
                     del plan[field]
             plans.append(plan)
         return plans
+    return None
+
+
+def find_owner_id(user_plans_id):
+    result = execute_select_query(
+        query=FIND_USER_ID_FROM_USER_PLANS, params={"user_plans_id": user_plans_id}
+    )
+    if result:
+        return result[0]["user_id"]
     return None

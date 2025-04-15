@@ -438,6 +438,13 @@ FIND_USER_PLANS_ID = text(
     """
 )
 
+FIND_USER_ID_FROM_USER_PLANS = text(
+    """
+    SELECT user_id FROM user_plans
+    WHERE id = :user_plans_id
+    """
+)
+
 FIND_NEXT_REPORTS_ID = text(
     """
     SELECT ur_next.id AS next_user_reports_id
