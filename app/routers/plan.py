@@ -96,9 +96,8 @@ async def patch_is_read(user_reports_id, current_user=Depends(get_current_user))
     """유저가 report를 읽었을 경우 user_reports의 is_read값 변경, 다음 Missions status IN_PROGRESS"""
     current_user_id = current_user.get("sub")
     owner_id = find_owner_id_user_reports(user_reports_id)
-    if current_user_id != str(owner_id):
-        raise HTTPException(status_code=403, detail="Forbidden")
-    patch_user_reports_is_read(user_reports_id)
+    if current_user_id == str(owner_id):
+        patch_user_reports_is_read(user_reports_id)
 
 
 @router.get("/missions/{user_missions_id}", tags=["Plan"])
