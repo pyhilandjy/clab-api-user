@@ -9,7 +9,8 @@ from app.services.plan import (
     patch_user_reports_is_read,
     user_missions_data,
     select_plans_demo,
-    find_owner_id,
+    find_owner_id_user_plans,
+    find_owner_id_user_reports,
 )
 from app.services.users import get_current_user, fetch_user_name
 
@@ -78,7 +79,7 @@ async def get_missions_reports_list(
 ):
     """missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수."""
     user_id = current_user.get("sub")
-    owner_id = find_owner_id(user_plans_id)
+    owner_id = find_owner_id_user_plans(user_plans_id)
     if user_id != str(owner_id):
         raise HTTPException(status_code=403, detail="Forbidden")
     return select_missions_reports_list(user_plans_id)
@@ -91,8 +92,12 @@ async def get_user_used_plans(current_user=Depends(get_current_user)):
 
 
 @router.patch("/reports/is-read/{user_reports_id}", tags=["Plan"])
-async def patch_is_read(user_reports_id):
+async def patch_is_read(user_reports_id, current_user=Depends(get_current_user)):
     """유저가 report를 읽었을 경우 user_reports의 is_read값 변경, 다음 Missions status IN_PROGRESS"""
+    current_user_id = current_user.get("sub")
+    owner_id = find_owner_id_user_reports(user_reports_id)
+    if current_user_id != str(owner_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
     patch_user_reports_is_read(user_reports_id)
 
 
