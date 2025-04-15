@@ -80,9 +80,8 @@ async def get_missions_reports_list(
     """missions, reports 의 id, type, record_time, summary, status, sort_order 반환하는 함수."""
     user_id = current_user.get("sub")
     owner_id = find_owner_id_user_plans(user_plans_id)
-    if user_id != str(owner_id):
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return select_missions_reports_list(user_plans_id)
+    if user_id == str(owner_id):
+        return select_missions_reports_list(user_plans_id)
 
 
 @router.get("/user/plans", tags=["Plan"])
@@ -107,7 +106,8 @@ async def get_audio_file(
     try:
         user_id = current_user.get("sub")
         user_name = current_user.get("user_metadata")["full_name"]
-        data = user_missions_data(user_missions_id)
-        return data
+        owner_id = find_owner_id_user_reports(user_missions_id)
+        if user_id != str(owner_id):
+            return user_missions_data(user_missions_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

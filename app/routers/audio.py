@@ -11,6 +11,7 @@ from app.services.audio import (
     update_user_missions_status,
     update_user_missions_status_for_demo,
 )
+from app.services.plan import find_owner_id_user_missions
 from app.services.users import get_current_user
 
 router = APIRouter()
@@ -23,6 +24,10 @@ async def create_upload_file(
     audio: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
+    user_id = current_user.get("sub")
+    owner_id = find_owner_id_user_missions(user_missions_id)
+    if user_id != str(owner_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         total_record_time = get_total_record_time(user_missions_id)
         user_id = current_user.get("sub")
@@ -49,6 +54,10 @@ async def create_upload_file(
     current_user: dict = Depends(get_current_user),
 ):
     """demo 버전 오디오 파일 업로드 3분->15분 제한"""
+    user_id = current_user.get("sub")
+    owner_id = find_owner_id_user_missions(user_missions_id)
+    if user_id != str(owner_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         total_record_time = get_total_record_time(user_missions_id)
         user_id = current_user.get("sub")

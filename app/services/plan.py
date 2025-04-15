@@ -27,6 +27,7 @@ from app.db.query import (
     SELECT_PLANS_DEMO,
     FIND_USER_ID_FROM_USER_PLANS,
     FIND_USER_ID_FROM_USER_REPORTS,
+    FIND_USER_ID_FROM_USER_MISSIONS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
 
@@ -558,7 +559,18 @@ def find_owner_id_user_plans(user_plans_id):
 
 def find_owner_id_user_reports(user_reports_id):
     result = execute_select_query(
-        query=FIND_USER_ID_FROM_USER_REPORTS, params={"user_plans_id": user_reports_id}
+        query=FIND_USER_ID_FROM_USER_REPORTS,
+        params={"user_reports_id": user_reports_id},
+    )
+    if result:
+        return result[0]["user_id"]
+    return None
+
+
+def find_owner_id_user_missions(user_missions_id):
+    result = execute_select_query(
+        query=FIND_USER_ID_FROM_USER_MISSIONS,
+        params={"user_missions_id": user_missions_id},
     )
     if result:
         return result[0]["user_id"]
