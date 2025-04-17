@@ -18,6 +18,7 @@ from app.db.query import (
     UPDATE_USER_REPORT_STATUS,
 )
 from app.db.worker import execute_insert_update_query, execute_select_query
+from app.error_utils import raise_http_500, safe_execute
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +61,12 @@ def create_audio_metadata(
 
 def insert_audio_metadata(metadata: dict):
     """오디오 파일 메타데이터 db적재"""
-    return execute_insert_update_query(
+    return safe_execute(
+        execute_insert_update_query,
         query=INSERT_AUDIO_META_DATA,
         params=metadata,
         return_id=True,
+        exception_detail="Failed to insert audio metadata",
     )
 
 
@@ -76,18 +79,17 @@ async def upload_to_s3(audio: UploadFile, file_path):
 
         s3.upload_fileobj(audio_stream, bucket_name, file_path)
 
-    except NoCredentialsError:
-        return {"error": "Credentials not available"}
+    except NoCredentialsError as e:
+        raise_http_500(e, detail="AWS credentials not available")
 
     except ClientError as e:
-        return {"error": f"ClientError: {str(e)}"}
+        raise_http_500(e, detail=f"ClientError during S3 upload: {str(e)}")
 
     except Exception as e:
-        print(f" 예외 발생: {str(e)}")
-        return {"error": f"Exception: {str(e)}"}
+        raise_http_500(e, detail="Unexpected error during S3 upload")
 
     else:
-        print(f" S3 업로드 성공: {file_path}")
+        logger.info(f"S3 업로드 성공: {file_path}")
         return {"message": "File uploaded successfully"}
 
 
@@ -100,17 +102,19 @@ def get_record_time(audio):
         duration_seconds = len(audio_segment) / 1000.0
         return round(duration_seconds)
     except Exception as e:
-        logger.error(f"Error getting record time: {e}")
-        raise Exception("Failed to get record time")
+        raise_http_500(e, detail="Failed to get record time")
 
 
 def get_total_record_time(user_missions_id: str):
-    total_record_time = execute_select_query(
-        query=SELECT_AUDIO_RECORD_TIME, params={"user_missions_id": user_missions_id}
+    return (
+        safe_execute(
+            execute_select_query,
+            query=SELECT_AUDIO_RECORD_TIME,
+            params={"user_missions_id": user_missions_id},
+            exception_detail="Failed to get total record time",
+        )[0].total_record_time
+        or 0
     )
-    if not total_record_time:
-        return 0
-    return total_record_time[0].total_record_time
 
 
 def update_user_missions_status(total_record_time, record_time, user_missions_id):
@@ -123,27 +127,35 @@ def update_user_missions_status(total_record_time, record_time, user_missions_id
     else:
         return
 
-    execute_insert_update_query(
+    safe_execute(
+        execute_insert_update_query,
         query=UPDATE_USER_MISSION_STATUS,
         params={"id": user_missions_id, "status": status},
+        exception_detail="Failed to update user mission status",
     )
 
     if status == "COMPLETED":
-        user_reports_id = execute_select_query(
+        user_reports_id = safe_execute(
+            execute_select_query,
             query=GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
             params={"user_missions_id": user_missions_id},
+            exception_detail="Failed to get user reports ID",
         )
         user_reports_id = str(user_reports_id[0].user_reports_id)
 
         if user_reports_id:
-            all_missions_status = execute_select_query(
+            all_missions_status = safe_execute(
+                execute_select_query,
                 query=CHECK_ALL_USER_MISSIONS_STATUS,
                 params={"user_reports_id": user_reports_id},
+                exception_detail="Failed to check all user missions status",
             )
             if all(status["status"] == "COMPLETED" for status in all_missions_status):
-                execute_insert_update_query(
+                safe_execute(
+                    execute_insert_update_query,
                     query=UPDATE_USER_REPORT_STATUS,
                     params={"id": user_reports_id, "status": "IN_PROGRESS"},
+                    exception_detail="Failed to update user report status",
                 )
 
 
@@ -159,25 +171,33 @@ def update_user_missions_status_for_demo(
     else:
         return
 
-    execute_insert_update_query(
+    safe_execute(
+        execute_insert_update_query,
         query=UPDATE_USER_MISSION_STATUS,
         params={"id": user_missions_id, "status": status},
+        exception_detail="Failed to update user mission status for demo",
     )
 
     if status == "COMPLETED":
-        user_reports_id = execute_select_query(
+        user_reports_id = safe_execute(
+            execute_select_query,
             query=GET_USER_REPORTS_ID_BY_USER_MISSIONS_ID,
             params={"user_missions_id": user_missions_id},
+            exception_detail="Failed to get user reports ID for demo",
         )
         user_reports_id = str(user_reports_id[0].user_reports_id)
 
         if user_reports_id:
-            all_missions_status = execute_select_query(
+            all_missions_status = safe_execute(
+                execute_select_query,
                 query=CHECK_ALL_USER_MISSIONS_STATUS,
                 params={"user_reports_id": user_reports_id},
+                exception_detail="Failed to check all user missions status for demo",
             )
             if all(status["status"] == "COMPLETED" for status in all_missions_status):
-                execute_insert_update_query(
+                safe_execute(
+                    execute_insert_update_query,
                     query=UPDATE_USER_REPORT_STATUS,
                     params={"id": user_reports_id, "status": "IN_PROGRESS"},
+                    exception_detail="Failed to update user report status for demo",
                 )
