@@ -13,14 +13,14 @@ from app.services.audio import (
 )
 from app.services.plan import find_owner_id_user_missions
 from app.services.users import get_current_user
-from app.error_utils import raise_http_403, raise_http_500
+from app.error_utils import raise_http_403
 
 router = APIRouter()
 
 
 # audio_files의
 @router.post("/audio", tags=["Audio"])
-async def create_upload_file(
+async def upload_audio_file(
     user_missions_id: str,
     audio: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
@@ -30,26 +30,23 @@ async def create_upload_file(
     owner_id = find_owner_id_user_missions(user_missions_id)
     if user_id != str(owner_id):
         raise_http_403(detail="Forbidden")
-    try:
-        total_record_time = get_total_record_time(user_missions_id)
-        file_path = create_file_path(user_id)
-        user_name = user_metadata["full_name"]
-        file_name = create_file_name(user_name)
-        record_time = get_record_time(audio)
-        # 3분 이상시 status = COMPLETED
-        update_user_missions_status(total_record_time, record_time, user_missions_id)
-        metadata = create_audio_metadata(
-            user_id, file_name, file_path[2:], record_time, user_missions_id
-        )
-        id = insert_audio_metadata(metadata)
-        await upload_to_s3(audio, file_path[2:])
-        return id
-    except Exception as e:
-        raise_http_500(e, detail="Failed to upload audio file")
+    total_record_time = get_total_record_time(user_missions_id)
+    file_path = create_file_path(user_id)
+    user_name = user_metadata["full_name"]
+    file_name = create_file_name(user_name)
+    record_time = get_record_time(audio)
+    # 3분 이상시 status = COMPLETED
+    update_user_missions_status(total_record_time, record_time, user_missions_id)
+    metadata = create_audio_metadata(
+        user_id, file_name, file_path[2:], record_time, user_missions_id
+    )
+    id = insert_audio_metadata(metadata)
+    await upload_to_s3(audio, file_path[2:])
+    return id
 
 
 @router.post("/audio/demo", tags=["Audio"])
-async def create_upload_file(
+async def upload_demo_audio_file(
     user_missions_id: str,
     audio: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
@@ -60,21 +57,18 @@ async def create_upload_file(
     owner_id = find_owner_id_user_missions(user_missions_id)
     if user_id != str(owner_id):
         raise_http_403(detail="Forbidden")
-    try:
-        total_record_time = get_total_record_time(user_missions_id)
-        file_path = create_file_path(user_id)
-        user_name = user_metadata["full_name"]
-        file_name = create_file_name(user_name)
-        record_time = get_record_time(audio)
-        # 15분 이상시 status = COMPLETED
-        update_user_missions_status_for_demo(
-            total_record_time, record_time, user_missions_id
-        )
-        metadata = create_audio_metadata(
-            user_id, file_name, file_path[2:], record_time, user_missions_id
-        )
-        id = insert_audio_metadata(metadata)
-        await upload_to_s3(audio, file_path[2:])
-        return id
-    except Exception as e:
-        raise_http_500(e, detail="Failed to upload demo audio file")
+    total_record_time = get_total_record_time(user_missions_id)
+    file_path = create_file_path(user_id)
+    user_name = user_metadata["full_name"]
+    file_name = create_file_name(user_name)
+    record_time = get_record_time(audio)
+    # 15분 이상시 status = COMPLETED
+    update_user_missions_status_for_demo(
+        total_record_time, record_time, user_missions_id
+    )
+    metadata = create_audio_metadata(
+        user_id, file_name, file_path[2:], record_time, user_missions_id
+    )
+    id = insert_audio_metadata(metadata)
+    await upload_to_s3(audio, file_path[2:])
+    return id
