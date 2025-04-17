@@ -11,6 +11,7 @@ from app.services.plan import (
     select_plans_demo,
     find_owner_id_user_plans,
     find_owner_id_user_reports,
+    find_owner_id_user_missions,
 )
 from app.services.users import (
     get_current_user,
@@ -100,6 +101,6 @@ async def get_audio_file(
 ):
     user_id = current_user.get("sub")
     user_name = current_user.get("user_metadata")["full_name"]
-    owner_id = find_owner_id_user_reports(user_missions_id)
+    owner_id = find_owner_id_user_missions(user_missions_id)
     if user_id != str(owner_id):
         return user_missions_data(user_missions_id)
