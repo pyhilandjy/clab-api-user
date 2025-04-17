@@ -6,6 +6,7 @@ from supabase import Client, create_client
 
 from app.config import settings
 from app.error_utils import raise_http_500, raise_http_400, raise_http_404, safe_execute
+from sentry_sdk import capture_message
 
 api_key_header = APIKeyHeader(name="authorization", auto_error=False)
 
@@ -34,11 +35,7 @@ def get_user_info_from_token(token: str) -> str:
 async def get_current_user(authorization: str = Security(api_key_header)):
     try:
         token = authorization.split(" ")[1]
-        payload = safe_execute(
-            get_user_info_from_token,
-            token,
-            exception_detail="Failed to get user info from token.",
-        )
+        payload = get_user_info_from_token(token)
         return payload
     except IndexError:
         raise_http_400("Authorization header is malformed.")
@@ -61,11 +58,13 @@ async def fetch_user_names(user_ids: List[str]) -> Dict[str, str]:
             )
             if not response or not response.user:
                 raise_http_404(f"User with ID {user_id} not found.")
-            user_name = response.user.user_metadata.get("name", "")
+            user_name = response.user.user_metadata.get("name") or ""
             user_data[user_id] = user_name
         except Exception as e:
+            capture_message(
+                f"Failed to fetch user name for ID: {user_id}", level="warning"
+            )
             user_data[user_id] = ""
-            raise_http_500(e, detail=f"Error fetching user name for ID: {user_id}")
 
     return user_data
 
