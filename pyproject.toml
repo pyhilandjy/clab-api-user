@@ -20,6 +20,7 @@ uvicorn = "^0.30.5"
 python-multipart = "^0.0.9"
 pytz = "^2024.1"
 pydub = "^0.25.1"
+sentry-sdk = "^2.26.1"
 
 
 [tool.poetry.group.dev.dependencies]
