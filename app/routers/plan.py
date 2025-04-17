@@ -12,7 +12,11 @@ from app.services.plan import (
     find_owner_id_user_plans,
     find_owner_id_user_reports,
 )
-from app.services.users import get_current_user, fetch_user_name
+from app.services.users import (
+    get_current_user,
+    fetch_user_name,
+    get_current_user_for_admin,
+)
 
 router = APIRouter()
 
@@ -78,8 +82,12 @@ async def get_user_used_plans(current_user=Depends(get_current_user)):
 
 
 @router.patch("/reports/is-read/{user_reports_id}", tags=["Plan"])
-async def patch_is_read(user_reports_id, current_user=Depends(get_current_user)):
+async def patch_is_read(
+    user_reports_id, current_user=Depends(get_current_user_for_admin)
+):
     """유저가 report를 읽었을 경우 user_reports의 is_read값 변경, 다음 Missions status IN_PROGRESS"""
+    if not current_user:
+        return {"skipped": True}
     current_user_id = current_user.get("sub")
     owner_id = find_owner_id_user_reports(user_reports_id)
     if current_user_id == str(owner_id):
