@@ -24,6 +24,17 @@ def raise_http_403(detail: str = "Forbidden"):
     raise HTTPException(status_code=403, detail=detail)
 
 
+def capture_message(message: str, level: str = "info"):
+    """
+    Log a non-exception warning or informational message to Sentry.
+
+    Args:
+        message (str): The message to log.
+        level (str): The severity level of the message (e.g., "info", "warning", "error").
+    """
+    sentry_sdk.capture_message(message, level=level)
+
+
 def safe_execute(
     fn: Callable[..., Any], *args, exception_detail: str = "처리 중 오류 발생", **kwargs
 ):
