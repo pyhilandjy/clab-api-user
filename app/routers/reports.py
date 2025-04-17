@@ -65,11 +65,7 @@ def get_insight_data(user_reports_id):
 
 @router.get("/reports/list/{user_plans_id}", tags=["User_Report"])
 def get_user_reports_list(user_plans_id: str):
-    try:
-        # user_id = current_user.get("sub")
-        # if not user_id:
-        #     raise HTTPException(status_code=400, detail="Invalid user ID")
-        list_data = select_list_data(user_plans_id)
-        return list_data
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    """
+    주어진 user_plans_id에 대한 보고서 목록을 반환합니다.
+    """
+    return select_list_data(user_plans_id)
