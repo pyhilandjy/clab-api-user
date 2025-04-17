@@ -5,6 +5,7 @@ import jwt
 from supabase import Client, create_client
 
 from app.config import settings
+from app.error_utils import raise_http_500, raise_http_400, raise_http_404, safe_execute
 
 api_key_header = APIKeyHeader(name="authorization", auto_error=False)
 
@@ -14,23 +15,35 @@ JWT_AUDIENCE = "authenticated"
 
 
 def get_user_info_from_token(token: str) -> str:
-
-    payload = jwt.decode(
-        token,
-        settings.supabase_jwt_key,
-        algorithms=["HS256"],
-        audience=JWT_AUDIENCE,
-    )
-    return payload
+    try:
+        payload = jwt.decode(
+            token,
+            settings.supabase_jwt_key,
+            algorithms=["HS256"],
+            audience=JWT_AUDIENCE,
+        )
+        return payload
+    except jwt.ExpiredSignatureError as e:
+        raise_http_400("Token has expired.")
+    except jwt.InvalidTokenError as e:
+        raise_http_400("Invalid token.")
+    except Exception as e:
+        raise_http_500(e, detail="Failed to decode token.")
 
 
 async def get_current_user(authorization: str = Security(api_key_header)):
     try:
         token = authorization.split(" ")[1]
-        payload = get_user_info_from_token(token)
+        payload = safe_execute(
+            get_user_info_from_token,
+            token,
+            exception_detail="Failed to get user info from token.",
+        )
         return payload
+    except IndexError:
+        raise_http_400("Authorization header is malformed.")
     except Exception as e:
-        raise e
+        raise_http_500(e, detail="Failed to get current user.")
 
 
 async def fetch_user_names(user_ids: List[str]) -> Dict[str, str]:
@@ -41,20 +54,35 @@ async def fetch_user_names(user_ids: List[str]) -> Dict[str, str]:
 
     for user_id in user_ids:
         try:
-            response = supabase.auth.admin.get_user_by_id(user_id)
+            response = safe_execute(
+                supabase.auth.admin.get_user_by_id,
+                user_id,
+                exception_detail=f"Failed to fetch user by ID: {user_id}",
+            )
+            if not response or not response.user:
+                raise_http_404(f"User with ID {user_id} not found.")
             user_name = response.user.user_metadata.get("name", "")
             user_data[user_id] = user_name
         except Exception as e:
             user_data[user_id] = ""
+            raise_http_500(e, detail=f"Error fetching user name for ID: {user_id}")
 
     return user_data
 
 
 def fetch_user_name(user_id: str) -> Dict[str, str]:
     """
-    Supabase를 통해 user_id에 해당하는 사용자 이름(user_name)을 비동기로 가져옵니다.
+    Supabase를 통해 user_id에 해당하는 사용자 이름(user_name)을 가져옵니다.
     """
-    response = supabase.auth.admin.get_user_by_id(user_id)
-    user_name = response.user.user_metadata.get("name", "")
-
-    return user_name
+    try:
+        response = safe_execute(
+            supabase.auth.admin.get_user_by_id,
+            user_id,
+            exception_detail=f"Failed to fetch user by ID: {user_id}",
+        )
+        if not response or not response.user:
+            raise_http_404(f"User with ID {user_id} not found.")
+        user_name = response.user.user_metadata.get("name", "")
+        return user_name
+    except Exception as e:
+        raise_http_500(e, detail=f"Error fetching user name for ID: {user_id}")
