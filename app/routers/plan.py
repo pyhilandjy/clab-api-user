@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.services.plan import (
     select_plans,
@@ -22,21 +22,15 @@ async def get_plans():
     """
     plan이 INPROGRESS인 데이터를 가져오는 엔드포인트
     """
-    plan = select_plans()
-    if not plan:
-        raise HTTPException(status_code=404, detail="Files not found")
-    return plan
+    return select_plans()
 
 
 @router.get("/plans/demo", tags=["Plan"])
-async def get_plans():
+async def get_plans_demo():
     """
-    plan이 INPROGRESS인 데이터를 가져오는 엔드포인트
+    데모 플랜 데이터를 가져오는 엔드포인트
     """
-    plan = select_plans_demo()
-    if not plan:
-        raise HTTPException(status_code=404, detail="Files not found")
-    return plan
+    return select_plans_demo()
 
 
 @router.get("/plans/{plans_id}", tags=["Plan"])
@@ -46,8 +40,7 @@ async def get_plan(plans_id: str, current_user=Depends(get_current_user)):
     """
     user_id = current_user.get("sub")
     user_name = fetch_user_name(user_id)
-    plan_detail = select_plans_id(plans_id, user_name)
-    return plan_detail
+    return select_plans_id(plans_id, user_name)
 
 
 class PlanPostRequest(BaseModel):
@@ -60,17 +53,11 @@ async def post_user_plan(
     payload: PlanPostRequest, current_user=Depends(get_current_user)
 ):
     """user_plans, user_missions, user_reports insert"""
-    try:
-        user_id = current_user.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=400, detail="Invalid user ID")
-        payload = payload.model_dump()
-        plan_id = payload.get("plan_id")
-        user_children_id = payload.get("user_children_id")
-        user_plans_id = insert_user_plan_mission(user_id, plan_id, user_children_id)
-        return user_plans_id
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    user_id = current_user.get("sub")
+    payload = payload.model_dump()
+    plan_id = payload.get("plan_id")
+    user_children_id = payload.get("user_children_id")
+    return insert_user_plan_mission(user_id, plan_id, user_children_id)
 
 
 @router.get("/contents/list/{user_plans_id}", tags=["Plan"])
@@ -103,11 +90,8 @@ async def patch_is_read(user_reports_id, current_user=Depends(get_current_user))
 async def get_audio_file(
     user_missions_id: str, current_user: dict = Depends(get_current_user)
 ):
-    try:
-        user_id = current_user.get("sub")
-        user_name = current_user.get("user_metadata")["full_name"]
-        owner_id = find_owner_id_user_reports(user_missions_id)
-        if user_id != str(owner_id):
-            return user_missions_data(user_missions_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    user_id = current_user.get("sub")
+    user_name = current_user.get("user_metadata")["full_name"]
+    owner_id = find_owner_id_user_reports(user_missions_id)
+    if user_id != str(owner_id):
+        return user_missions_data(user_missions_id)
