@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     supabase_key: str
     supabase_service_key: str
     supabase_jwt_key: str
+    sentry_dsn: str
+    sentry_environment: str
     model_config = SettingsConfigDict(env_file=".env")
 
 
