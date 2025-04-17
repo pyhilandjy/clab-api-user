@@ -43,6 +43,19 @@ async def get_current_user(authorization: str = Security(api_key_header)):
         raise_http_500(e, detail="Failed to get current user.")
 
 
+async def get_current_user_for_admin(authorization: str = Security(api_key_header)):
+    if not authorization:
+        return None
+    try:
+        token = authorization.split(" ")[1]
+        payload = get_user_info_from_token(token)
+        return payload
+    except IndexError:
+        raise_http_400("Authorization header is malformed.")
+    except Exception as e:
+        raise_http_500(e, detail="Failed to get current user.")
+
+
 async def fetch_user_names(user_ids: List[str]) -> Dict[str, str]:
     """
     Supabase를 통해 user_id에 해당하는 사용자 이름(user_name)을 비동기로 가져옵니다.
